@@ -3,6 +3,7 @@ import { whatsapp } from './config/contact'
 import { buildWhatsAppUrl } from './lib/whatsapp'
 import { Hero } from './sections/hero/Hero'
 import { Intro } from './sections/intro/Intro'
+import { Spaces } from './sections/spaces/Spaces'
 
 const quoteHref = buildWhatsAppUrl(whatsapp.phone, whatsapp.messages.quote)
 
@@ -19,6 +20,7 @@ export default function App() {
       <main id="conteudo">
         <Hero quoteHref={quoteHref} />
         <Intro />
+        <Spaces />
       </main>
     </>
   )
