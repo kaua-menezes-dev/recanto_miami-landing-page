@@ -2,6 +2,7 @@ import { Navbar } from './components/layout/Navbar'
 import { whatsapp } from './config/contact'
 import { buildWhatsAppUrl } from './lib/whatsapp'
 import { Hero } from './sections/hero/Hero'
+import { Intro } from './sections/intro/Intro'
 
 const quoteHref = buildWhatsAppUrl(whatsapp.phone, whatsapp.messages.quote)
 
@@ -17,6 +18,7 @@ export default function App() {
       <Navbar quoteHref={quoteHref} />
       <main id="conteudo">
         <Hero quoteHref={quoteHref} />
+        <Intro />
       </main>
     </>
   )

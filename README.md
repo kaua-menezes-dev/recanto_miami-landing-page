@@ -2,7 +2,7 @@
 
 Landing page do **Recanto Miami**, espaço para casamentos, festas e eventos. O objetivo do site é apresentar o espaço real — filme, fotos, casamentos e depoimentos autênticos — e transformar visitantes interessados em **conversas qualificadas no WhatsApp**, com mensagem pré-preenchida e editável.
 
-> **Status atual:** a Seção 01 (Hero + barra de navegação + vídeo de fundo) está implementada. As demais seções estão em fase de design no Figma e **ainda não foram implementadas**. Veja [Status da implementação](#status-da-implementação).
+> **Status atual:** a Seção 01 (Hero + barra de navegação + vídeo de fundo) e a Seção 02 (depoimento + revelação da foto no scroll) estão implementadas. As demais seções estão em fase de design no Figma e **ainda não foram implementadas**. Veja [Status da implementação](#status-da-implementação).
 
 ## Objetivo de negócio
 
@@ -45,15 +45,18 @@ Configuração opcional: copie `.env.example` para `.env` para sobrescrever o n�
 ```text
 ├── docs/                       # Documentação aprovada (marca, design, conversão, workflow)
 ├── public/media/hero/          # Renditions web do filme + pôster (gerados do original)
+├── public/media/intro/         # Foto real da Seção 02 em WebP (16:9, 3:2, 4:5)
 ├── src/
 │   ├── config/
 │   │   ├── site.ts             # Âncoras das seções (ordem do site map)
 │   │   └── contact.ts          # Número e mensagem do WhatsApp (isolados para confirmação)
 │   ├── lib/whatsapp.ts         # Montagem segura da URL wa.me (+ testes)
+│   ├── lib/easing.ts           # Curvas cubic-bezier do Design System para animações no scroll (+ testes)
 │   ├── components/
 │   │   ├── layout/             # Navbar, MobileMenu (menu em <dialog> nativo)
 │   │   └── ui/                 # ButtonLink, WhatsAppCta, WhatsAppIcon
 │   ├── sections/hero/          # Hero, HeroVideo, useHeroVideo
+│   ├── sections/intro/         # Intro (Seção 02), useScrollReveal
 │   └── styles/index.css        # Tokens do Design System, tipografia, overlay e animações
 ├── CLAUDE.md                   # Regras do projeto para o Claude Code
 └── PRODUCT.md                  # Contexto de produto
@@ -93,6 +96,13 @@ Verificações executadas na implementação do Hero:
 - Teclado: link "Pular para o conteúdo" primeiro na ordem de tabulação; anel de foco dourado de 2px.
 - Performance local: CLS 0 e nenhuma long task durante o carregamento.
 
+Verificações executadas na implementação da Seção 02:
+
+- `npm run typecheck`, `npm run lint`, `npm test` (8 testes: WhatsApp + curvas de easing) e `npm run build` — sem erros.
+- Build de produção no navegador em 1440×900, 1280×800, 768×1024, 390×844, 375×812 e 360×740: citação com 5 linhas (≥1280) e 6 linhas (abaixo), sem overflow horizontal, CLS 0 durante a rolagem, sem erros no console.
+- Revelação medida pela variável `--reveal-progress`: 0 → ~0,5 → 1 ao descer e retorno aos mesmos valores ao subir (desktop e celular); trecho de ≈ 83vh no desktop e ≈ 63vh no celular.
+- Imagem: a fonte correta é escolhida por breakpoint (16:9, 3:2, 4:5).
+
 Ainda **não** verificado: comportamento com `prefers-reduced-motion` e Save-Data em navegador real (implementado no código, não emulado), testes em dispositivos físicos iOS/Android e auditoria Lighthouse em ambiente de produção.
 
 ## Acessibilidade e performance (Hero)
@@ -113,14 +123,27 @@ Ainda **não** verificado: comportamento com `prefers-reduced-motion` e Save-Dat
 | `hero-720p.mp4` (<1024px) | 1280×720 | H.264 High, faststart, sem áudio | 1,1 Mbps (2 passes) | 4,1 MB |
 | `hero-poster.webp` | 1280×720 (primeiro quadro) | WebP | — | 77 KB |
 
+## Seção 02 — O Recanto (depoimento + foto)
+
+- **Composição:** pausa editorial em modo Day (marfim) logo após o Hero noturno, sem divisória: eyebrow, citação centralizada da noiva, atribuição, foto e CTA discreto "Conheça nossos espaços" (âncora para a Seção 03).
+- **Citação:** Bodoni Moda 80 px (≥1280), 56 px (tablet) e 30 px fluido (celular), com as quebras de linha aprovadas no Figma (5 linhas no desktop, 6 abaixo). "É como se unisse tudo." fica sempre em linha própria, em itálico e `text-accent` (gold-deep, AA sobre marfim).
+- **Revelação no scroll:** a foto começa numa janela central (560×315 de 1280×720 no desktop; 440×293 no tablet; 280×350 no celular) e abre até o quadro inteiro enquanto a imagem interna volta de 1,15 → 1,0 — revela mais do lugar em vez de dar zoom. O progresso é função pura da posição de rolagem (volta ao rolar para cima), sem pin nem scroll-jacking.
+- **Técnica:** `useScrollReveal` lê o `getBoundingClientRect` uma vez por frame (rAF, listener passivo ativo só perto da viewport via IntersectionObserver) e escreve uma única variável CSS `--reveal-progress`; o CSS converte em `clip-path: inset()` + `transform: scale()`. Nenhum re-render do React durante o scroll; o tamanho de layout não muda (CLS 0).
+- **Curva:** o progresso usa a curva "Drift" do Design System (ease-in-out), em vez da "Settle" citada nas notas do Figma — com o scroll controlando a animação, a Settle concentrava quase toda a abertura no início; a Drift deixa a expansão perceptível ao longo de todo o trecho.
+- **Movimento reduzido:** sem crescimento nem escala — a foto aparece no estado final e os textos sem animação de entrada.
+- **Foto:** `cerimonia-altar` (foto profissional do site atual, também usada nos frames do Figma), com recortes por breakpoint via `<picture>` — 16:9 (1280/1920 px), 3:2 (960/1376 px) e 4:5 (640/864 px), WebP de 93 a 258 KB, `loading="lazy"` e `decoding="async"`.
+
 ## Status da implementação
 
 | Seção | Design (Figma) | Implementação |
 |---|---|---|
 | 01 — Hero + navegação | Aprovado (rev. 2) | **Implementado** |
-| 02 a 08 | Em andamento / não iniciado | Não iniciado |
+| 02 — O Recanto (depoimento) | Aprovado (rev. 1) | **Implementado** |
+| 03 a 08 | Em andamento | Não iniciado |
 
 Pendências conhecidas:
+
+- **Seção 02:** confirmar que o depoimento é de um evento do Recanto Miami e que a noiva autorizou o uso; confirmar os direitos da foto `cerimonia-altar`. O CTA "Conheça nossos espaços" aponta para `#espacos`, que passa a funcionar com a Seção 03.
 
 - **WhatsApp:** número (`+55 11 98946-4713`) e mensagem de orçamento foram copiados do site oficial atual e aguardam confirmação do proprietário (`src/config/contact.ts`).
 - **Logo oficial:** ainda não fornecido; a navegação usa o nome "Recanto Miami" em Bodoni Moda.

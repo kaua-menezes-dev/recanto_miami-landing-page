@@ -209,6 +209,39 @@
   }
 }
 
+@utility type-body-sm {
+  /* Mobile/Body/SM (14) → Desktop/Body/SM (15) */
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.55;
+  @media (width >= 48rem) {
+    font-size: 15px;
+  }
+}
+
+/*
+ * Section 02 quote: Mobile/Heading/H2 (30) → Desktop/Heading/H1 (56, tablet
+ * layout up to 1279px) → Desktop/Display/LG (80). Fluid below 390px so the
+ * longest line ("É como se unisse tudo.”") never wraps on small phones.
+ */
+@utility type-intro-quote {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(1.625rem, 7.7vw, 1.875rem);
+  line-height: 1.16;
+  letter-spacing: -0.005em;
+  @media (width >= 48rem) {
+    font-size: 56px;
+    line-height: 1.1;
+    letter-spacing: -0.01em;
+  }
+  @media (width >= 80rem) {
+    font-size: 80px;
+    line-height: 1.04;
+    letter-spacing: -0.015em;
+  }
+}
+
 /* ---------- Hero contrast overlay ---------- */
 
 /*
@@ -289,6 +322,60 @@
   animation-delay: var(--delay, 0ms);
   @media (prefers-reduced-motion: reduce) {
     animation: none;
+  }
+}
+
+/* Entrance triggered when an ancestor gains `.is-inview` (scroll into view). */
+@utility enter-on-view {
+  --rise: 12px;
+  @media (width >= 48rem) {
+    --rise: 24px;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    opacity: 0;
+    .is-inview & {
+      animation: enter-rise 1000ms var(--ease-settle) both;
+      animation-delay: var(--delay, 0ms);
+    }
+  }
+}
+
+/* ---------- Section 02 scroll-linked image reveal ---------- */
+
+/*
+ * `--reveal-progress` (0 → 1) is written by useScrollReveal. The window is a
+ * clip-path inset that opens from the approved start size to the full frame,
+ * while the photo counter-scales to 1 — more of the place is revealed rather
+ * than zoomed. Layout size never changes, so there is no layout shift.
+ * Start windows (Figma storyboard): desktop 560×315 of 1280×720 (28.125%),
+ * tablet 440×293 of 688×459 (18%), mobile 280×350 of 350×438 (10%).
+ * `--reveal-end`: where the stage centre must reach (× viewport) to settle.
+ */
+@utility intro-reveal-stage {
+  --reveal-inset: 10%;
+  --reveal-scale: 1.08;
+  --reveal-end: 0.62;
+  clip-path: inset(calc(var(--reveal-inset) * (1 - var(--reveal-progress, 0))));
+  @media (width >= 48rem) {
+    --reveal-inset: 18%;
+    --reveal-scale: 1.12;
+    --reveal-end: 0.5;
+  }
+  @media (width >= 80rem) {
+    --reveal-inset: 28.125%;
+    --reveal-scale: 1.15;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    clip-path: none;
+  }
+}
+
+@utility intro-reveal-media {
+  transform: scale(calc(1 + (var(--reveal-scale) - 1) * (1 - var(--reveal-progress, 0))));
+  will-change: transform;
+  @media (prefers-reduced-motion: reduce) {
+    transform: none;
+    will-change: auto;
   }
 }
 
