@@ -1562,3 +1562,136 @@
     bottom: 96px;
   }
 }
+
+/* ---------- Section 06 — Depoimentos ---------- */
+
+/*
+ * Values follow "Testimonials / Desktop 1440", "Tablet 768" and "Mobile 390"
+ * (rev 2): compact cards with a 12px section-local radius (not a DS token yet),
+ * three columns of 338px in a 1062px grid from 1280px, two columns up to 800px
+ * from 768px, one column on phones.
+ */
+@utility testimonials {
+  overflow-x: clip;
+}
+
+/* Title: Mobile/Display/LG (44) → Desktop/Heading/H1 (56) → Desktop/Display/LG (80). */
+@utility type-testimonials-display {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(2.25rem, 11.28vw, 2.75rem);
+  line-height: 1.04;
+  letter-spacing: -0.015em;
+  @media (width >= 48rem) {
+    font-size: 56px;
+    line-height: 1.1;
+    letter-spacing: -0.01em;
+  }
+  @media (width >= 80rem) {
+    font-size: 80px;
+    line-height: 1.04;
+    letter-spacing: -0.015em;
+  }
+}
+
+/* Card title: Mobile/Heading/H3 (Bodoni Moda Medium 24) at every size. */
+@utility type-testimonial-title {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 24px;
+  line-height: 1.24;
+}
+
+/* Quote: Mobile/Body/MD (16, phones and tablet) → Desktop/Body/SM (15, desktop card). */
+@utility type-testimonial-quote {
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.65;
+  @media (width >= 80rem) {
+    font-size: 15px;
+    line-height: 1.55;
+  }
+}
+
+@utility testimonials-grid {
+  display: flex;
+  align-items: flex-start;
+  width: 100%;
+  gap: 16px;
+  &[data-columns='2'] {
+    max-width: 800px;
+    gap: 20px;
+  }
+  &[data-columns='3'] {
+    max-width: 1062px;
+    gap: 24px;
+  }
+}
+
+/*
+ * Column drift: `--drift` (−1 → 1, 0 when the section is centred) comes from
+ * useColumnDrift; each column scales it by its own amplitude. Desktop: A ±12px,
+ * B 0 (follows the page), C ±6px. Tablet: only column B, ±8px, and only with a
+ * fine pointer. Phones and reduced motion: no drift. Rest offsets (padding-top)
+ * are static, so only `transform` changes while scrolling.
+ */
+@utility testimonials-column {
+  --drift-amp: 0px;
+  display: flex;
+  flex: 1 1 0;
+  min-width: 0;
+  flex-direction: column;
+  gap: 16px;
+  transform: translate3d(0, calc(var(--drift, 0) * var(--drift-amp)), 0);
+  [data-drifting] & {
+    will-change: transform;
+  }
+  [data-columns='2'] & {
+    gap: 20px;
+  }
+  [data-columns='2'] &[data-col='1'] {
+    padding-top: 64px;
+  }
+  [data-columns='3'] & {
+    gap: 24px;
+  }
+  [data-columns='3'] &[data-col='0'] {
+    padding-top: 64px;
+  }
+  [data-columns='3'] &[data-col='2'] {
+    padding-top: 32px;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    @media (pointer: fine) {
+      [data-columns='2'] &[data-col='1'] {
+        --drift-amp: 8px;
+      }
+    }
+    [data-columns='3'] &[data-col='0'] {
+      --drift-amp: 12px;
+    }
+    [data-columns='3'] &[data-col='2'] {
+      --drift-amp: 6px;
+    }
+  }
+}
+
+/* Card: no border, no shadow; entrance is opacity + 12px rise, once (useCardReveal). */
+@utility testimonials-card {
+  border-radius: 12px;
+  padding: 32px 24px;
+  @media (width >= 80rem) {
+    padding: 32px;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    opacity: 0;
+    transform: translate3d(0, 12px, 0);
+    &[data-revealed] {
+      opacity: 1;
+      transform: none;
+      transition:
+        opacity 600ms var(--ease-settle) var(--reveal-delay, 0ms),
+        transform 600ms var(--ease-settle) var(--reveal-delay, 0ms);
+    }
+  }
+}

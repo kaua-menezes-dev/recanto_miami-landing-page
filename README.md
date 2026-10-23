@@ -2,7 +2,7 @@
 
 Landing page do **Recanto Miami**, espaço para casamentos, festas e eventos. O objetivo do site é apresentar o espaço real — filme, fotos, casamentos e depoimentos autênticos — e transformar visitantes interessados em **conversas qualificadas no WhatsApp**, com mensagem pré-preenchida e editável.
 
-> **Status atual:** a Seção 01 (Hero + barra de navegação + vídeo de fundo), a Seção 02 (depoimento + revelação da foto no scroll), a Seção 03 (galeria panorâmica dos espaços) e a Seção 04 (histórias reais — galeria vertical + álbuns dos casamentos) estão implementadas. As demais seções estão em fase de design no Figma e **ainda não foram implementadas**. Veja [Status da implementação](#status-da-implementação).
+> **Status atual:** a Seção 01 (Hero + barra de navegação + vídeo de fundo), a Seção 02 (depoimento + revelação da foto no scroll), a Seção 03 (galeria panorâmica dos espaços), a Seção 04 (histórias reais — galeria vertical + álbuns dos casamentos) e a Seção 06 (depoimentos em mosaico com movimento sutil das colunas) estão implementadas; a Seção 05 está implementada em um pull request aguardando revisão. As demais seções estão em fase de design no Figma e **ainda não foram implementadas**. Veja [Status da implementação](#status-da-implementação).
 
 ## Objetivo de negócio
 
@@ -62,6 +62,7 @@ Configuração opcional: copie `.env.example` para `.env` para sobrescrever o n�
 │   ├── sections/experiences/   # Experiences (Seção 05)
 │   ├── sections/spaces/        # Spaces (Seção 03), useHorizontalGallery
 │   ├── sections/stories/       # Stories (Seção 04), StoryAlbum, useStoriesGallery, dados dos casamentos
+│   ├── sections/testimonials/  # Testimonials (Seção 06), deriva das colunas, revelação dos cards, depoimentos reais
 │   └── styles/index.css        # Tokens do Design System, tipografia, overlay e animações
 ├── CLAUDE.md                   # Regras do projeto para o Claude Code
 └── PRODUCT.md                  # Contexto de produto
@@ -156,6 +157,13 @@ Ainda **não** verificado: comportamento com `prefers-reduced-motion` e Save-Dat
 - **Expansão final:** `useScrollReveal` ganhou a opção `anchor: 'top'` — o progresso vai de 0 (topo da foto a ~48% da viewport; 45% no celular) a 1 (topo da foto no topo da viewport, ou no fim da página). As bordas laterais do recorte saem da margem do conteúdo até 0 (só a largura muda, sem zoom nem mudança de altura), a foto interna vai de 1,06 → 1 e a frase surge nos últimos 20%. Fluxo normal do documento, sem pin; reverte ao rolar para cima. Quando o fim da página limita o trecho (a Seção 06 ainda não existe), o início é antecipado para manter ao menos 40% de uma viewport de rolagem.
 - **Performance:** só `clip-path`, `transform` e `opacity`; uma variável CSS por frame, listener passivo ativo apenas perto da foto, nenhum re-render do React durante o scroll; WebP com `srcset`/`sizes`, `loading="lazy"` e proporções reservadas (sem CLS); sem blur.
 - **Movimento reduzido:** tudo aparece no estado final (foto aberta e em tela cheia, frase visível), sem transições.
+## Seção 06 — Depoimentos (mosaico)
+
+- **Referência:** 21st.dev *Testimonial V2* — colunas independentes, cards de alturas diferentes e colunas que se movem em ritmos diferentes. Adaptação: o loop infinito virou um deslocamento ligado à rolagem (sem loop, sem autoplay, sem pin), com o visual Botanical Luxury do Figma (rev. 2).
+- **Composição (Figma rev. 2):** fundo areia (Natural Sand), cards marfim de 338 px com cantos de 12 px, sem borda nem sombra, padding de 32 px; título em Bodoni Moda Medium 24, depoimento em 15 px (16 px no tablet/celular), nome e evento. Grade de 1062 px com 3 colunas (gutter 24) e inícios escalonados (+64 / 0 / +32 px) a partir de 1280 px; 2 colunas (até 800 px) a partir de 768 px; 1 coluna no celular. O card da Marcella (verde Forest) tem o mesmo tamanho dos outros. Sem CTA.
+- **Movimento das colunas:** `useColumnDrift` escreve uma única variável `--drift` (−1 → 1, zero com a seção centralizada) e cada coluna a converte em `translateY` pela sua amplitude: desktop A ±12 px, B 0 (acompanha a página), C ±6 px; tablet só a coluna B, ±8 px, com ponteiro fino; celular sem deslocamento. Linear na rolagem, só `transform`, listener passivo ativo apenas perto da seção (IntersectionObserver) e uma leitura de layout por frame. Enquanto a Seção 06 for a última da página, o fim do trecho é limitado à última posição alcançável, para o movimento completo acontecer.
+- **Entrada:** título com a mesma entrada das outras seções (traço → eyebrow → título → texto, 80 ms). Cards: um único IntersectionObserver marca cada card uma vez (opacidade + 12 px, 600 ms Settle), escalonando os que entram juntos linha a linha; ao mudar de breakpoint a entrada não se repete. Deslocamento e entrada ficam em elementos diferentes (coluna × card), sem conflito de `transform`.
+- **Acessibilidade:** `section` com `h2`; cada card é `figure` + `blockquote` + `figcaption`; nada é interativo. Movimento reduzido: sem deslocamento e cards visíveis sem animação.
 
 ## Status da implementação
 
@@ -166,7 +174,8 @@ Ainda **não** verificado: comportamento com `prefers-reduced-motion` e Save-Dat
 | 03 — Nossos Espaços (galeria panorâmica) | Aprovado (rev. 1) | **Implementado** |
 | 04 — Histórias Reais (galeria + álbuns) | Aprovado (rev. 1) | **Implementado** |
 | 05 — Experiências e Serviços | Aprovado (rev. 1) | **Implementado** (PR em revisão) |
-| 06 a 08 | Em andamento | Não iniciado |
+| 06 — Depoimentos (mosaico) | Aprovado (rev. 2) | **Implementado** |
+| 07 e 08 | Em andamento | Não iniciado |
 
 Pendências conhecidas:
 
@@ -174,6 +183,7 @@ Pendências conhecidas:
 - **Seção 03:** confirmar os direitos das fotos `jardim-vista`, `cerimonia-corredor`, `piscina` e `salao` (cópias WebP do site atual; originais em alta resolução seriam preferíveis).
 - **Seção 04:** confirmar a licença das 40 fotos (crédito @NairobiComunicacao no site atual) e a autorização dos casais; as iniciais (J + M, G + L, N + W, A + I, T + G) são os rótulos já publicados. O relato opcional de cada casal (marcador no Figma) não é exibido até existir texto real autorizado.
 - **Seção 05:** o Bloco 02 exibe o placeholder aprovado no Figma — falta uma foto real de festa (debutante, aniversário ou evento corporativo) no Recanto; não usar banco de imagens. A foto final `jardim-vista` é provisória (também aparece na Seção 03) e `cerimonia-altar` repete a foto da Seção 02. Todos os fatos (tipos de evento, até 250 convidados, estrutura e serviços da casa) vêm do site atual e aguardam confirmação do proprietário; confirmar também os direitos de `buffet-verde`.
+- **Seção 06:** confirmar a autorização de cada depoimento e nome e que todos se referem ao Recanto Miami; o título do card da Marcella é um trecho literal do próprio depoimento; o rótulo "Casamento" vem do título "Nas palavras das noivas" do site atual. Não há fotos autorizadas das clientes (o espaço opcional para foto do Figma não é exibido) nem depoimento de outros tipos de evento.
 
 - **WhatsApp:** número (`+55 11 98946-4713`) e mensagem de orçamento foram copiados do site oficial atual e aguardam confirmação do proprietário (`src/config/contact.ts`).
 - **Logo oficial:** ainda não fornecido; a navegação usa o nome "Recanto Miami" em Bodoni Moda.
