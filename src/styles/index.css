@@ -106,6 +106,12 @@
     }
   }
 
+  /* Tailwind's preflight resets buttons to the default arrow; real links and enabled buttons show the pointer. Component utilities (e.g. the Stories card's custom cursor) still override this. */
+  a[href],
+  button:not(:disabled) {
+    cursor: pointer;
+  }
+
   body {
     margin: 0;
     background-color: var(--color-night);
