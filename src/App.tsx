@@ -2,6 +2,7 @@ import { Footer } from './components/layout/Footer'
 import { Navbar } from './components/layout/Navbar'
 import { whatsapp } from './config/contact'
 import { buildWhatsAppUrl } from './lib/whatsapp'
+import { Experiences } from './sections/experiences/Experiences'
 import { FinalCta } from './sections/final/FinalCta'
 import { Hero } from './sections/hero/Hero'
 import { Intro } from './sections/intro/Intro'
@@ -28,6 +29,7 @@ export default function App() {
         <Intro />
         <Spaces />
         <Stories visitHref={visitHref} />
+        <Experiences />
         <Testimonials />
         <PlanEvent />
         <FinalCta visitHref={visitHref} />

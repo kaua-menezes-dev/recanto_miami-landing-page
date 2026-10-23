@@ -28,6 +28,9 @@ Build an elegant, credible, conversion-oriented website for **Recanto Miami**, a
 >
 > **2026-10-23 — user authorization:** implementation of **Section 04 (Real Stories — vertical infinite-scroll gallery + wedding albums)** is authorized (`src/sections/stories/`), including feature branch, commits, push and merge to `main` without a pull request.
 >
+> **2026-10-23 — user authorization:** implementation of **Section 05 (Experiences & Services — editorial reveals + final photographic expansion)** is authorized (`src/sections/experiences/`), including feature branch, commit, push and a pull request to `main`. **Do not merge** — the user merges after review.
+>
+> **2026-10-23 — user authorization (Phase 01 recovery):** Section 05 was integrated by merging `feat/section-05-experiences` directly into `main` and pushing (no PR, no force push). PR #2 is a historical artifact and must not be merged separately.
 > **2026-10-23 — user authorization:** implementation of **Section 06 (Testimonials — compact masonry + scroll-linked column drift)** is authorized and done (`src/sections/testimonials/`), including feature branch, commits, push and direct merge to `main` without a pull request.
 > **2026-10-23 — user authorization:** implementation of **Section 07 (Plan Your Event — inquiry form + WhatsApp handoff)** is authorized (`src/sections/plan/`), including feature branch, commit, push and direct merge to `main` without a pull request.
 > **2026-10-23 — user authorization:** implementation of **Section 08 (Final CTA + Footer — scroll-linked image expansion)** is authorized and done (`src/sections/final/`, `src/components/layout/Footer.tsx`), including feature branch, commit, push and direct merge to `main` without a pull request.

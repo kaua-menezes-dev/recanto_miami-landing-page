@@ -13,11 +13,16 @@ const clamp01 = (value: number) => Math.min(1, Math.max(0, value))
  * so each breakpoint owns its range). It is a pure function of scroll position,
  * so scrolling back reverses the reveal. No pinning, no scroll-jacking.
  *
+ * With `anchor: 'top'` (Section 05 expansion) the range is measured on the top
+ * edge instead: from `--reveal-start` × viewport height to `--reveal-end` ×
+ * viewport height, and the end is clamped to the last reachable scroll position
+ * so an element near the end of the page still settles at 1.
+ *
  * The scroll listener is attached only while the element is near the viewport,
  * reads layout once per animation frame and then writes a single custom property.
  * Reduced motion: progress is fixed at 1 (settled image) and nothing is listened to.
  */
-export function useScrollReveal<T extends HTMLElement>() {
+export function useScrollReveal<T extends HTMLElement>({ anchor = 'center' }: { anchor?: 'center' | 'top' } = {}) {
   const ref = useRef<T>(null)
 
   useEffect(() => {
@@ -26,20 +31,29 @@ export function useScrollReveal<T extends HTMLElement>() {
 
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)')
     let frame = 0
+    let startRatio = 1
     let endRatio = 0.5
     let listening = false
 
     const readConfig = () => {
-      const value = parseFloat(getComputedStyle(el).getPropertyValue('--reveal-end'))
-      endRatio = Number.isFinite(value) ? value : 0.5
+      const style = getComputedStyle(el)
+      const start = parseFloat(style.getPropertyValue('--reveal-start'))
+      const end = parseFloat(style.getPropertyValue('--reveal-end'))
+      startRatio = Number.isFinite(start) ? start : 1
+      endRatio = Number.isFinite(end) ? end : 0.5
     }
 
     const update = () => {
       frame = 0
       const rect = el.getBoundingClientRect()
       const viewport = window.innerHeight
-      const startTop = viewport
-      const endTop = viewport * endRatio - rect.height / 2
+      let startTop = viewport
+      let endTop = viewport * endRatio - rect.height / 2
+      if (anchor === 'top') {
+        const remaining = document.documentElement.scrollHeight - viewport - window.scrollY
+        startTop = viewport * startRatio
+        endTop = Math.min(startTop - 1, Math.max(viewport * endRatio, rect.top - remaining))
+      }
       const progress = clamp01((startTop - rect.top) / Math.max(1, startTop - endTop))
       el.style.setProperty('--reveal-progress', easeDrift(progress).toFixed(4))
     }
@@ -101,7 +115,7 @@ export function useScrollReveal<T extends HTMLElement>() {
       stopListening()
       if (frame) cancelAnimationFrame(frame)
     }
-  }, [])
+  }, [anchor])
 
   return ref
 }

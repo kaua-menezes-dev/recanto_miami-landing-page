@@ -2,7 +2,7 @@
 
 Landing page do **Recanto Miami**, espaço para casamentos, festas e eventos. O objetivo do site é apresentar o espaço real — filme, fotos, casamentos e depoimentos autênticos — e transformar visitantes interessados em **conversas qualificadas no WhatsApp**, com mensagem pré-preenchida e editável.
 
-> **Status atual:** a Seção 01 (Hero + barra de navegação + vídeo de fundo), a Seção 02 (depoimento + revelação da foto no scroll), a Seção 03 (galeria panorâmica dos espaços) a Seção 04 (histórias reais — galeria vertical + álbuns dos casamentos) a Seção 06 (depoimentos em mosaico com movimento sutil das colunas) a Seção 07 (planeje seu evento — formulário que abre o WhatsApp com a mensagem pronta) e a Seção 08 (CTA final cinematográfico + rodapé) estão implementadas; a Seção 05 está implementada em um pull request aguardando revisão. As demais seções estão em fase de design no Figma e **ainda não foram implementadas**. Veja [Status da implementação](#status-da-implementação).
+> **Status atual:** as oito seções estão implementadas: a Seção 01 (Hero + barra de navegação + vídeo de fundo), a Seção 02 (depoimento + revelação da foto no scroll), a Seção 03 (galeria panorâmica dos espaços), a Seção 04 (histórias reais — galeria vertical + álbuns dos casamentos), a Seção 05 (experiências e serviços — revelações editoriais + expansão da foto final), a Seção 06 (depoimentos em mosaico com movimento sutil das colunas), a Seção 07 (planeje seu evento — formulário que abre o WhatsApp com a mensagem pronta) e a Seção 08 (CTA final cinematográfico + rodapé). Veja [Status da implementação](#status-da-implementação).
 
 ## Objetivo de negócio
 
@@ -47,6 +47,7 @@ Configuração opcional: copie `.env.example` para `.env` para sobrescrever o n�
 ├── public/media/hero/          # Renditions web do filme + pôster (gerados do original)
 ├── public/media/intro/         # Foto real da Seção 02 em WebP (16:9, 3:2, 4:5)
 ├── public/media/stories/       # 40 fotos reais dos 5 casamentos (WebP 384/828/1280)
+├── public/media/experiences/   # Fotos reais da Seção 05 (cerimonia-altar 4:5, buffet-verde 3:2)
 ├── src/
 │   ├── config/
 │   │   ├── site.ts             # Âncoras das seções (ordem do site map)
@@ -58,6 +59,7 @@ Configuração opcional: copie `.env.example` para `.env` para sobrescrever o n�
 │   │   └── ui/                 # ButtonLink, WhatsAppCta, WhatsAppIcon, InstagramIcon
 │   ├── sections/hero/          # Hero, HeroVideo, useHeroVideo
 │   ├── sections/intro/         # Intro (Seção 02), useScrollReveal
+│   ├── sections/experiences/   # Experiences (Seção 05)
 │   ├── sections/spaces/        # Spaces (Seção 03), useHorizontalGallery
 │   ├── sections/stories/       # Stories (Seção 04), StoryAlbum, useStoriesGallery, dados dos casamentos
 │   ├── sections/testimonials/  # Testimonials (Seção 06), deriva das colunas, revelação dos cards, depoimentos reais
@@ -149,6 +151,14 @@ Ainda **não** verificado: comportamento com `prefers-reduced-motion` e Save-Dat
 - **CTA:** "Agende uma visita" abre o WhatsApp com a mesma mensagem de visita do site atual ("Olá! Gostaria de agendar uma visita ao Recanto Miami.").
 - **Performance:** WebP 384/828/1280 com `srcset`/`sizes`, `loading="lazy"` (exceto as 2 primeiras), dimensões reservadas (sem CLS); profundidade e cursor só com ponteiro fino, ≥768 px e movimento permitido; um único loop rAF que dorme quando estabiliza e só escuta o scroll perto da galeria; medidas apenas no resize; nenhum re-render do React durante o scroll. Movimento reduzido: sem profundidade, escala ou cursor; fotos e legendas já visíveis; álbum com fades de 200 ms.
 
+## Seção 05 — Experiências e Serviços (editorial + expansão final)
+
+- **Composição (Figma rev. 1):** continua no marfim da Seção 04, sem divisória. Intro centralizada (fio dourado, eyebrow, Display 80/56/44 com "da história." em itálico); Bloco 01 "Cerimônias" com foto 4:5 à esquerda e texto alinhado à base da foto; Bloco 02 "Festas e celebrações" espelhado, com o texto no topo e a foto sangrando pela borda direita; Bloco 03 "Estrutura e diferenciais" com título dividido, foto panorâmica, legenda lateral, seis diferenciais tipográficos (3 × 2) e a linha "Serviços da casa"; fecha com a foto do jardim e a frase final. **Sem CTA** (decisão registrada em `docs/decisions/decision-log.md`).
+- **Grade:** coluna única no celular, 8 colunas (gutter 20) a partir de 768 px e a composição de 12 colunas (gutter 24) a partir de 1280 px. As sangrias usam `--exp-bleed` (margem + centralização acima de 1440 px), calculada em `cqw` para nunca causar rolagem horizontal.
+- **Revelação editorial:** uma vez por bloco, ao entrar na tela (`useInViewOnce`), a janela da foto abre com `clip-path` (de baixo para cima; da esquerda no Bloco 02) em 1 s com a curva Settle, enquanto a foto assenta de 1,08 → 1; os textos entram em seguida com o `enter-on-view` existente (atrasos de 200 ms + 80 ms).
+- **Expansão final:** `useScrollReveal` ganhou a opção `anchor: 'top'` — o progresso vai de 0 (topo da foto a ~48% da viewport; 45% no celular) a 1 (topo da foto no topo da viewport, ou no fim da página). As bordas laterais do recorte saem da margem do conteúdo até 0 (só a largura muda, sem zoom nem mudança de altura), a foto interna vai de 1,06 → 1 e a frase surge nos últimos 20%. Fluxo normal do documento, sem pin; reverte ao rolar para cima. Com as Seções 06–08 abaixo, o trecho completo (~48% da viewport) está sempre disponível; o ajuste provisório de fim de página foi removido na integração com o `main`.
+- **Performance:** só `clip-path`, `transform` e `opacity`; uma variável CSS por frame, listener passivo ativo apenas perto da foto, nenhum re-render do React durante o scroll; WebP com `srcset`/`sizes`, `loading="lazy"` e proporções reservadas (sem CLS); sem blur.
+- **Movimento reduzido:** tudo aparece no estado final (foto aberta e em tela cheia, frase visível), sem transições.
 ## Seção 06 — Depoimentos (mosaico)
 
 - **Referência:** 21st.dev *Testimonial V2* — colunas independentes, cards de alturas diferentes e colunas que se movem em ritmos diferentes. Adaptação: o loop infinito virou um deslocamento ligado à rolagem (sem loop, sem autoplay, sem pin), com o visual Botanical Luxury do Figma (rev. 2).
@@ -175,7 +185,7 @@ Ainda **não** verificado: comportamento com `prefers-reduced-motion` e Save-Dat
 | 02 — O Recanto (depoimento) | Aprovado (rev. 1) | **Implementado** |
 | 03 — Nossos Espaços (galeria panorâmica) | Aprovado (rev. 1) | **Implementado** |
 | 04 — Histórias Reais (galeria + álbuns) | Aprovado (rev. 1) | **Implementado** |
-| 05 — Experiências e Serviços | Aprovado (rev. 1) | Implementado no PR #2 (aguardando revisão) |
+| 05 — Experiências e Serviços | Aprovado (rev. 1) | **Implementado** |
 | 06 — Depoimentos (mosaico) | Aprovado (rev. 2) | **Implementado** |
 | 07 — Planeje seu evento (formulário + WhatsApp) | Aprovado (rev. 1) | **Implementado** |
 | 08 — CTA final e rodapé | Desktop aprovado (rev. 2); tablet/celular em revisão (rev. 3) | **Implementado** |
@@ -185,6 +195,7 @@ Pendências conhecidas:
 - **Seção 02:** confirmar que o depoimento é de um evento do Recanto Miami e que a noiva autorizou o uso; confirmar os direitos da foto `cerimonia-altar`. O CTA "Conheça nossos espaços" aponta para `#espacos` (Seção 03).
 - **Seção 03:** confirmar os direitos das fotos `jardim-vista`, `cerimonia-corredor`, `piscina` e `salao` (cópias WebP do site atual; originais em alta resolução seriam preferíveis).
 - **Seção 04:** confirmar a licença das 40 fotos (crédito @NairobiComunicacao no site atual) e a autorização dos casais; as iniciais (J + M, G + L, N + W, A + I, T + G) são os rótulos já publicados. O relato opcional de cada casal (marcador no Figma) não é exibido até existir texto real autorizado.
+- **Seção 05:** o Bloco 02 exibe o placeholder aprovado no Figma — falta uma foto real de festa (debutante, aniversário ou evento corporativo) no Recanto; não usar banco de imagens. A foto final `jardim-vista` é provisória (também aparece na Seção 03) e `cerimonia-altar` repete a foto da Seção 02. Todos os fatos (tipos de evento, até 250 convidados, estrutura e serviços da casa) vêm do site atual e aguardam confirmação do proprietário; confirmar também os direitos de `buffet-verde`.
 - **Seção 06:** confirmar a autorização de cada depoimento e nome e que todos se referem ao Recanto Miami; o título do card da Marcella é um trecho literal do próprio depoimento; o rótulo "Casamento" vem do título "Nas palavras das noivas" do site atual. Não há fotos autorizadas das clientes (o espaço opcional para foto do Figma não é exibido) nem depoimento de outros tipos de evento.
 - **Seção 07:** os campos, opções e o modelo da mensagem repetem o formulário do site atual (auditado em 23/10/2026); "Ainda não tenho data" foi acrescentado no design. Nome e tipo de evento são obrigatórios (decisão do design; o site atual não exige nenhum campo). A foto `salao` é a mesma da Seção 03 (direitos a confirmar; uma foto dedicada seria preferível). O número do WhatsApp vem de `src/config/contact.ts` (a confirmar com o proprietário). Os valores digitados ficam só no `sessionStorage` da visita; nada é enviado a servidor.
 - **Seção 08:** Instagram (`@recantomiami_eventos`), e-mail, endereço (Av. Acapulco, 186 — Água Azul, Guarulhos - SP) e o link do mapa vêm do rodapé do site atual (lidos em 23/10/2026) e aguardam confirmação do proprietário, como o número. Não existe página de política de privacidade: o link previsto no Figma não foi publicado. O crédito da foto ("a confirmar" no Figma) fica oculto até ser confirmado; a foto `cerimonia-corredor` é a mesma da Seção 03 (uma foto de fim de tarde dedicada seria preferível). A mensagem de visita é a do site atual, não a proposta das notas do Figma (ainda não aprovada).

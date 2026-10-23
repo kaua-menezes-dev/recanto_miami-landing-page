@@ -962,6 +962,608 @@
   }
 }
 
+/* ---------- Section 05 — Experiências e Serviços ---------- */
+
+/*
+ * Values follow "Experiences / Desktop 1440", "Tablet 768" and "Mobile 390"
+ * (rev 1). Layout: one column on phones, 8 columns (gutter 20) from 768px and
+ * the 12-column desktop composition (gutter 24) from 1280px. `--exp-bleed` is
+ * the distance from the content edge to the viewport edge (page margin plus the
+ * centring space above 1440px); bleeding photos and the final expansion use it.
+ * The section is an inline-size container so `cqw` excludes the scrollbar and
+ * nothing can overflow horizontally.
+ */
+@utility experiences {
+  --exp-margin: 20px;
+  --exp-bleed: calc(var(--exp-margin) + max(0px, (100cqw - 1440px) / 2));
+  container-type: inline-size;
+  overflow-x: clip;
+  @media (width >= 48rem) {
+    --exp-margin: 40px;
+  }
+  @media (width >= 64rem) {
+    --exp-margin: 80px;
+  }
+}
+
+@utility exp-container {
+  max-width: 1440px;
+  margin-inline: auto;
+  padding-inline: var(--exp-margin);
+}
+
+/* Intro title: Mobile/Display/LG (44) → Desktop/Heading/H1 (56) → Desktop/Display/LG (80). */
+@utility type-exp-display {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(2.25rem, 11.28vw, 2.75rem);
+  line-height: 1.04;
+  letter-spacing: -0.015em;
+  @media (width >= 48rem) {
+    font-size: 56px;
+    line-height: 1.1;
+    letter-spacing: -0.01em;
+  }
+  @media (width >= 80rem) {
+    font-size: 80px;
+    line-height: 1.04;
+    letter-spacing: -0.015em;
+  }
+}
+
+/* Block headings: Mobile/Heading/H1 (36) → Desktop/Heading/H2 (40) → Desktop/Heading/H1 (56). */
+@utility type-exp-heading {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 36px;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  @media (width >= 48rem) {
+    font-size: 40px;
+    line-height: 1.16;
+    letter-spacing: -0.005em;
+  }
+  @media (width >= 80rem) {
+    font-size: 56px;
+    line-height: 1.1;
+    letter-spacing: -0.01em;
+  }
+}
+
+/* Pair body copy: Mobile/Body/MD (16) → Desktop/Body/SM (15, narrow tablet column) → Desktop/Body/MD (17). */
+@utility type-exp-pair-body {
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.65;
+  @media (width >= 48rem) {
+    font-size: 15px;
+    line-height: 1.55;
+  }
+  @media (width >= 80rem) {
+    font-size: 17px;
+    line-height: 1.65;
+  }
+}
+
+/* Heading/H3 (Bodoni Medium): occasions 24 → 28 on desktop; feature titles 24 → 28 from tablet. */
+@utility type-exp-occasion {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 24px;
+  line-height: 1.24;
+  @media (width >= 80rem) {
+    font-size: 28px;
+  }
+}
+
+@utility type-exp-feature-title {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 24px;
+  line-height: 1.24;
+  @media (width >= 48rem) {
+    font-size: 28px;
+  }
+}
+
+/* Quote/LG: 24 → 32 on desktop. */
+@utility type-exp-quote {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 24px;
+  line-height: 1.35;
+  @media (width >= 80rem) {
+    font-size: 32px;
+  }
+}
+
+/* Closing statement: Mobile/Heading/H2 (30) → Desktop/Heading/H2 (40) → Desktop/Heading/H1 (56). */
+@utility type-exp-statement {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(1.625rem, 7.7vw, 1.875rem);
+  line-height: 1.16;
+  letter-spacing: -0.005em;
+  @media (width >= 48rem) {
+    font-size: 40px;
+  }
+  @media (width >= 80rem) {
+    font-size: 56px;
+    line-height: 1.1;
+    letter-spacing: -0.01em;
+  }
+}
+
+@utility exp-heading-gap {
+  margin-top: 12px;
+  @media (width >= 48rem) {
+    margin-top: 16px;
+  }
+  @media (width >= 80rem) {
+    margin-top: 20px;
+  }
+}
+
+@utility exp-body-gap {
+  margin-top: 16px;
+  @media (width >= 48rem) {
+    margin-top: 20px;
+  }
+  @media (width >= 80rem) {
+    margin-top: 28px;
+  }
+}
+
+@utility exp-list-gap {
+  margin-top: 24px;
+  @media (width >= 48rem) {
+    margin-top: 28px;
+  }
+  @media (width >= 80rem) {
+    margin-top: 40px;
+  }
+}
+
+@utility exp-occasions-gap {
+  margin-top: 24px;
+  @media (width >= 80rem) {
+    margin-top: 36px;
+  }
+}
+
+@utility exp-measure {
+  @media (width >= 80rem) {
+    max-width: 460px;
+  }
+}
+
+/* Hairline rows (component "Experiences / Detail Row"): no icon, no card. */
+@utility exp-detail-row {
+  border-top: 1px solid var(--border-subtle);
+  padding-block: 12px;
+  @media (width >= 48rem) {
+    padding-block: 14px;
+  }
+}
+
+@utility exp-occasion-row {
+  border-top: 1px solid var(--border-subtle);
+  padding-block: 14px;
+  @media (width >= 80rem) {
+    padding-block: 16px;
+  }
+}
+
+@utility exp-caption {
+  display: block;
+  margin-top: 10px;
+  color: var(--text-secondary);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: 1.4;
+  @media (width >= 48rem) {
+    margin-top: 12px;
+  }
+  @media (width >= 80rem) {
+    margin-top: 16px;
+  }
+}
+
+@utility exp-caption-bleed-right {
+  margin-left: 20px;
+  @media (width >= 48rem) {
+    margin-left: 0;
+  }
+}
+
+/* ----- Editorial pairs (Blocks 01 and 02) ----- */
+
+@utility exp-pair {
+  .exp-pair-text {
+    margin-top: 28px;
+  }
+  @media (width >= 48rem) {
+    display: grid;
+    grid-template-columns: repeat(8, minmax(0, 1fr));
+    column-gap: 20px;
+    .exp-pair-media,
+    .exp-pair-text {
+      grid-row: 1;
+      margin-top: 0;
+    }
+  }
+  @media (width >= 80rem) {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    column-gap: 24px;
+  }
+}
+
+/* Block 01: 4:5 photo cols 1–5 / 1–6, text bottom-aligned with the photo (caption height excluded). */
+@utility exp-pair-ceremony {
+  @media (width >= 48rem) {
+    .exp-pair-media {
+      grid-column: 1 / 6;
+    }
+    .exp-pair-text {
+      grid-column: 6 / 9;
+      align-self: end;
+      margin-bottom: 30px;
+    }
+  }
+  @media (width >= 80rem) {
+    .exp-pair-media {
+      grid-column: 1 / 7;
+    }
+    .exp-pair-text {
+      grid-column: 8 / 12;
+      margin-bottom: 42px;
+    }
+  }
+}
+
+/* Block 02 mirrored: text top-aligned, photo bleeds off the right edge. */
+@utility exp-pair-celebrations {
+  @media (width >= 48rem) {
+    .exp-pair-media {
+      grid-column: 5 / 9;
+    }
+    .exp-pair-text {
+      grid-column: 1 / 5;
+      align-self: start;
+      margin-top: 40px;
+    }
+  }
+  @media (width >= 80rem) {
+    .exp-pair-media {
+      grid-column: 8 / 13;
+    }
+    .exp-pair-text {
+      grid-column: 1 / 8;
+      margin-top: 72px;
+    }
+  }
+}
+
+@utility exp-ratio-4x5 {
+  aspect-ratio: 4 / 5;
+}
+
+@utility exp-ratio-celebration {
+  aspect-ratio: 7 / 6;
+  @media (width >= 48rem) {
+    aspect-ratio: 374 / 460;
+  }
+  @media (width >= 80rem) {
+    aspect-ratio: 599 / 560;
+  }
+}
+
+@utility exp-bleed-left {
+  margin-left: calc(-1 * var(--exp-margin));
+  @media (width >= 48rem) {
+    margin-left: 0;
+  }
+}
+
+@utility exp-bleed-right {
+  margin-left: 20px;
+  margin-right: calc(-1 * var(--exp-bleed));
+  @media (width >= 48rem) {
+    margin-left: 0;
+  }
+}
+
+/* Media/Placeholder (Ratio 3:2) — must be replaced by an authorised photo before launch. */
+@utility exp-placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px;
+  background-color: var(--color-sand);
+  border: 1px dashed var(--border-strong);
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+/* ----- Block 03 ----- */
+
+@utility exp-venue {
+  .exp-venue-lede {
+    margin-top: 16px;
+  }
+  .exp-venue-figure {
+    margin-top: 32px;
+  }
+  .exp-venue-photo {
+    margin-inline: calc(-1 * var(--exp-margin));
+    aspect-ratio: 3 / 2;
+  }
+  .exp-venue-caption {
+    display: block;
+    margin-top: 10px;
+  }
+  @media (width >= 48rem) {
+    display: grid;
+    grid-template-columns: repeat(8, minmax(0, 1fr));
+    column-gap: 20px;
+    .exp-venue-heading,
+    .exp-venue-lede {
+      grid-column: 1 / 9;
+    }
+    .exp-venue-lede {
+      max-width: 440px;
+      margin-top: 20px;
+    }
+    .exp-venue-figure {
+      grid-column: 2 / 9;
+      margin-top: 48px;
+      margin-right: calc(-1 * var(--exp-bleed));
+    }
+    .exp-venue-photo {
+      margin-inline: 0;
+      aspect-ratio: 16 / 9;
+    }
+    .exp-venue-caption {
+      margin-top: 12px;
+    }
+  }
+  @media (width >= 80rem) {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    column-gap: 24px;
+    .exp-venue-heading {
+      grid-column: 1 / 9;
+      grid-row: 1;
+    }
+    .exp-venue-lede {
+      grid-column: 9 / 13;
+      grid-row: 1;
+      align-self: end;
+      max-width: none;
+      margin: 0 20px 6px 0;
+    }
+    .exp-venue-figure {
+      grid-column: 1 / 13;
+      grid-row: 2;
+      display: grid;
+      grid-template-columns: subgrid;
+      margin-top: 64px;
+      margin-right: 0;
+    }
+    .exp-venue-photo {
+      grid-column: 3 / 13;
+      grid-row: 1;
+    }
+    .exp-venue-caption {
+      grid-column: 1 / 3;
+      grid-row: 1;
+      align-self: end;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 0;
+    }
+  }
+}
+
+@utility exp-venue-facts {
+  margin-top: 28px;
+  @media (width >= 48rem) {
+    display: grid;
+    grid-template-columns: repeat(8, minmax(0, 1fr));
+    column-gap: 20px;
+    margin-top: 42px;
+    & > * {
+      grid-column: 2 / 9;
+    }
+  }
+  @media (width >= 80rem) {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    column-gap: 24px;
+    margin-top: 80px;
+    & > * {
+      grid-column: 3 / 13;
+    }
+  }
+}
+
+@utility exp-features {
+  display: flex;
+  flex-direction: column;
+  @media (width >= 48rem) {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 4px 20px;
+  }
+  @media (width >= 80rem) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px 24px;
+  }
+}
+
+/* Component "Experiences / Feature": hairline, gold-deep index, Bodoni H3, Body SM. */
+@utility exp-feature {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border-top: 1px solid var(--border-subtle);
+  padding: 16px 0 20px;
+  @media (width >= 48rem) {
+    gap: 10px;
+    padding: 20px 0 32px;
+  }
+}
+
+@utility exp-services {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 16px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border-subtle);
+  @media (width >= 48rem) {
+    gap: 12px;
+    margin-top: 40px;
+    padding-top: 24px;
+  }
+  @media (width >= 80rem) {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    column-gap: 24px;
+    align-items: baseline;
+    margin-top: 48px;
+    padding-top: 28px;
+    .exp-services-text {
+      grid-column: 2 / 4;
+      text-wrap: balance;
+    }
+  }
+}
+
+/* ----- Editorial reveal (storyboard R1–R3): once per block, on entering view ----- */
+
+/*
+ * The photo window opens with a clip-path inset (from the bottom, or from the
+ * left for Block 02) while the photo settles from 1.08 to 1 — 1000ms Settle.
+ * Text uses enter-on-view with 200ms+ delays so it follows the photo. Layout
+ * never changes; reduced motion shows everything settled.
+ */
+@utility exp-reveal {
+  position: relative;
+  overflow: hidden;
+  background-color: var(--color-sand);
+  @media (prefers-reduced-motion: no-preference) {
+    clip-path: inset(var(--exp-from, 86% 0 0 0));
+    transition: clip-path 1000ms var(--ease-settle);
+    .is-inview & {
+      clip-path: inset(0);
+    }
+  }
+}
+
+@utility exp-reveal-from-left {
+  --exp-from: 0 86% 0 0;
+}
+
+@utility exp-reveal-plain {
+  --exp-scale: 1;
+}
+
+@utility exp-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  @media (prefers-reduced-motion: no-preference) {
+    transform: scale(var(--exp-scale, 1.08));
+    transition: transform 1000ms var(--ease-settle);
+    .is-inview & {
+      transform: none;
+    }
+  }
+}
+
+/* ----- Final photographic expansion (storyboards E1–E3, M1–M3) ----- */
+
+/*
+ * `--reveal-progress` (0 → 1, Drift-eased) is written by useScrollReveal with
+ * the top-edge anchor: 0 when the image top is at `--reveal-start` × viewport,
+ * 1 when it reaches the viewport top (or the last scroll position). The side
+ * clip inset shrinks from the content edge (`--exp-bleed`) to 0 — only the
+ * edges travel, the height never changes, so there is no zoom or layout shift.
+ * The photo eases from a slight overscale to 1 for depth; the statement fades
+ * and rises in over the last 20% of progress. Normal document flow throughout.
+ */
+@utility exp-final {
+  --reveal-start: 0.45;
+  --reveal-end: 0;
+  --exp-depth: 1.04;
+  --exp-text: clamp(0, (var(--reveal-progress, 0) - 0.8) * 5, 1);
+  position: relative;
+  overflow: hidden;
+  height: min(143.6cqw, 100svh);
+  clip-path: inset(0 calc(var(--exp-bleed) * (1 - var(--reveal-progress, 0))));
+  @media (width >= 48rem) {
+    --reveal-start: 0.48;
+    --exp-depth: 1.06;
+    height: min(83.33cqw, 100svh);
+  }
+  @media (width >= 80rem) {
+    height: min(55.56cqw, 100svh);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    clip-path: none;
+  }
+}
+
+@utility exp-final-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scale(calc(1 + (var(--exp-depth) - 1) * (1 - var(--reveal-progress, 0))));
+  will-change: transform;
+  @media (prefers-reduced-motion: reduce) {
+    transform: none;
+    will-change: auto;
+  }
+}
+
+/* Deep Night 0 → 60% → 78%: ≥60% behind the display text (DS minimum 55%). */
+@utility exp-final-scrim {
+  position: absolute;
+  inset: auto 0 0;
+  height: 68%;
+  background: linear-gradient(to bottom, rgb(23 43 36 / 0) 0%, rgb(23 43 36 / 0.6) 50%, rgb(23 43 36 / 0.78) 100%);
+  opacity: calc(0.35 + 0.65 * var(--reveal-progress, 0));
+  @media (width >= 48rem) {
+    height: 62.5%;
+  }
+  @media (width >= 80rem) {
+    height: 60%;
+  }
+}
+
+@utility exp-final-statement {
+  position: absolute;
+  left: var(--exp-bleed);
+  bottom: 48px;
+  width: min(1200px, 100% - 2 * var(--exp-bleed));
+  opacity: var(--exp-text);
+  transform: translate3d(0, calc((1 - var(--exp-text)) * 24px), 0);
+  @media (width >= 48rem) {
+    bottom: 64px;
+  }
+  @media (width >= 80rem) {
+    bottom: 96px;
+  }
+}
+
 /* ---------- Section 06 — Depoimentos ---------- */
 
 /*
