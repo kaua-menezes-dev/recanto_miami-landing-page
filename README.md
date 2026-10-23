@@ -2,7 +2,7 @@
 
 Landing page do **Recanto Miami**, espaço para casamentos, festas e eventos. O objetivo do site é apresentar o espaço real — filme, fotos, casamentos e depoimentos autênticos — e transformar visitantes interessados em **conversas qualificadas no WhatsApp**, com mensagem pré-preenchida e editável.
 
-> **Status atual:** a Seção 01 (Hero + barra de navegação + vídeo de fundo), a Seção 02 (depoimento + revelação da foto no scroll), a Seção 03 (galeria panorâmica dos espaços) a Seção 04 (histórias reais — galeria vertical + álbuns dos casamentos) e a Seção 06 (depoimentos em mosaico com movimento sutil das colunas) estão implementadas; a Seção 05 está implementada em um pull request aguardando revisão. As demais seções estão em fase de design no Figma e **ainda não foram implementadas**. Veja [Status da implementação](#status-da-implementação).
+> **Status atual:** a Seção 01 (Hero + barra de navegação + vídeo de fundo), a Seção 02 (depoimento + revelação da foto no scroll), a Seção 03 (galeria panorâmica dos espaços) a Seção 04 (histórias reais — galeria vertical + álbuns dos casamentos) a Seção 06 (depoimentos em mosaico com movimento sutil das colunas) e a Seção 07 (planeje seu evento — formulário que abre o WhatsApp com a mensagem pronta) estão implementadas; a Seção 05 está implementada em um pull request aguardando revisão. As demais seções estão em fase de design no Figma e **ainda não foram implementadas**. Veja [Status da implementação](#status-da-implementação).
 
 ## Objetivo de negócio
 
@@ -61,6 +61,7 @@ Configuração opcional: copie `.env.example` para `.env` para sobrescrever o n�
 │   ├── sections/spaces/        # Spaces (Seção 03), useHorizontalGallery
 │   ├── sections/stories/       # Stories (Seção 04), StoryAlbum, useStoriesGallery, dados dos casamentos
 │   ├── sections/testimonials/  # Testimonials (Seção 06), deriva das colunas, revelação dos cards, depoimentos reais
+│   ├── sections/plan/          # PlanEvent (Seção 07), InquiryForm, opções e mensagem do WhatsApp (+ testes)
 │   └── styles/index.css        # Tokens do Design System, tipografia, overlay e animações
 ├── CLAUDE.md                   # Regras do projeto para o Claude Code
 └── PRODUCT.md                  # Contexto de produto
@@ -165,7 +166,8 @@ Ainda **não** verificado: comportamento com `prefers-reduced-motion` e Save-Dat
 | 04 — Histórias Reais (galeria + álbuns) | Aprovado (rev. 1) | **Implementado** |
 | 05 — Experiências e Serviços | Aprovado (rev. 1) | Implementado no PR #2 (aguardando revisão) |
 | 06 — Depoimentos (mosaico) | Aprovado (rev. 2) | **Implementado** |
-| 07 e 08 | Em andamento | Não iniciado |
+| 07 — Planeje seu evento (formulário + WhatsApp) | Aprovado (rev. 1) | **Implementado** |
+| 08 — CTA final e rodapé | Em revisão | Não iniciado |
 
 Pendências conhecidas:
 
@@ -173,6 +175,7 @@ Pendências conhecidas:
 - **Seção 03:** confirmar os direitos das fotos `jardim-vista`, `cerimonia-corredor`, `piscina` e `salao` (cópias WebP do site atual; originais em alta resolução seriam preferíveis).
 - **Seção 04:** confirmar a licença das 40 fotos (crédito @NairobiComunicacao no site atual) e a autorização dos casais; as iniciais (J + M, G + L, N + W, A + I, T + G) são os rótulos já publicados. O relato opcional de cada casal (marcador no Figma) não é exibido até existir texto real autorizado.
 - **Seção 06:** confirmar a autorização de cada depoimento e nome e que todos se referem ao Recanto Miami; o título do card da Marcella é um trecho literal do próprio depoimento; o rótulo "Casamento" vem do título "Nas palavras das noivas" do site atual. Não há fotos autorizadas das clientes (o espaço opcional para foto do Figma não é exibido) nem depoimento de outros tipos de evento.
+- **Seção 07:** os campos, opções e o modelo da mensagem repetem o formulário do site atual (auditado em 23/10/2026); "Ainda não tenho data" foi acrescentado no design. Nome e tipo de evento são obrigatórios (decisão do design; o site atual não exige nenhum campo). A foto `salao` é a mesma da Seção 03 (direitos a confirmar; uma foto dedicada seria preferível). O número do WhatsApp vem de `src/config/contact.ts` (a confirmar com o proprietário). Os valores digitados ficam só no `sessionStorage` da visita; nada é enviado a servidor.
 
 - **WhatsApp:** número (`+55 11 98946-4713`) e mensagem de orçamento foram copiados do site oficial atual e aguardam confirmação do proprietário (`src/config/contact.ts`).
 - **Logo oficial:** ainda não fornecido; a navegação usa o nome "Recanto Miami" em Bodoni Moda.

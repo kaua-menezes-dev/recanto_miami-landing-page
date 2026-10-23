@@ -26,6 +26,7 @@
   --color-gold-deep: #755830;
   --color-sand-line: #d9d2c4;
   --color-ivory-muted: #bfc1b9;
+  --color-clay: #8c3a2c;
 
   /* Radius */
   --radius-xs: 2px;
@@ -1091,5 +1092,331 @@
         opacity 600ms var(--ease-settle) var(--reveal-delay, 0ms),
         transform 600ms var(--ease-settle) var(--reveal-delay, 0ms);
     }
+  }
+}
+
+/* ---------- Section 07 — Planeje seu evento ---------- */
+
+/*
+ * Values follow "Plan / Desktop 1440", "Tablet 768" and "Mobile 390" (rev 1).
+ * Desktop: 12-col grid, photo cols 1–5 stretched to the content height, heading
+ * and form in cols 7–12 (56px apart). Tablet: 4:5 photo + heading side by side
+ * (20px gutter), form full width 64px below. Phones: heading → photo (350×260)
+ * → form, 40px apart. Photo radius 12px (8px on phones) is the section-local
+ * radius shared with Section 06, not a DS token.
+ */
+@utility plan-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: 'heading' 'photo' 'form';
+  row-gap: 40px;
+  @media (width >= 48rem) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-areas: 'photo heading' 'form form';
+    column-gap: 20px;
+    row-gap: 64px;
+  }
+  @media (width >= 80rem) {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    grid-template-rows: auto 1fr;
+    grid-template-areas: none;
+    column-gap: 24px;
+    row-gap: 56px;
+  }
+}
+
+/* Title: Mobile/Heading/H1 (36) → Desktop/Heading/H2 (40, tablet) → Desktop/Heading/H1 (56). */
+@utility type-plan-title {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 36px;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  @media (width >= 48rem) {
+    font-size: 40px;
+    line-height: 1.16;
+    letter-spacing: -0.005em;
+  }
+  @media (width >= 80rem) {
+    font-size: 56px;
+    line-height: 1.1;
+    letter-spacing: -0.01em;
+  }
+}
+
+/* Desktop/Label/Field (14, Medium) at every size. */
+@utility type-field-label {
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 1.3;
+  letter-spacing: 0.005em;
+}
+
+@utility plan-heading {
+  grid-area: heading;
+  min-width: 0;
+  @media (width >= 48rem) {
+    align-self: end;
+    padding-bottom: 8px;
+  }
+  @media (width >= 80rem) {
+    grid-area: auto;
+    grid-column: 7 / 13;
+    grid-row: 1;
+    align-self: start;
+    padding-bottom: 0;
+  }
+}
+
+@utility plan-form {
+  grid-area: form;
+  min-width: 0;
+  @media (width >= 80rem) {
+    grid-area: auto;
+    grid-column: 7 / 13;
+    grid-row: 2;
+  }
+}
+
+/*
+ * Photo reveal: a clip mask opens upward (inset from the top 100% → 0) while
+ * the photo settles from 1.06 to 1 — 1000ms Settle (600ms on phones), opacity
+ * over the first 360ms. Layout size is fixed by the grid, so nothing shifts.
+ * object-position keeps the Figma crop: the left table and its flowers.
+ */
+@keyframes plan-photo-clip {
+  from {
+    clip-path: inset(100% 0 0 0 round var(--plan-radius));
+  }
+  to {
+    clip-path: inset(0 0 0 0 round var(--plan-radius));
+  }
+}
+
+@keyframes plan-photo-settle {
+  from {
+    transform: scale(1.06);
+  }
+  to {
+    transform: none;
+  }
+}
+
+@keyframes plan-rule-draw {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: none;
+  }
+}
+
+@utility plan-photo {
+  --plan-radius: 8px;
+  --plan-clip: 600ms;
+  grid-area: photo;
+  position: relative;
+  aspect-ratio: 350 / 260;
+  overflow: hidden;
+  border-radius: var(--plan-radius);
+  background-color: var(--color-sand);
+  & img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: 39% 50%;
+  }
+  @media (width >= 48rem) {
+    --plan-radius: 12px;
+    --plan-clip: 1000ms;
+    aspect-ratio: 4 / 5;
+    & img {
+      object-position: 9% 50%;
+    }
+  }
+  @media (width >= 80rem) {
+    grid-area: auto;
+    grid-column: 1 / 6;
+    grid-row: 1 / 3;
+    aspect-ratio: auto;
+    & img {
+      object-position: 6% 50%;
+    }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    clip-path: inset(100% 0 0 0 round var(--plan-radius));
+    opacity: 0;
+    .is-inview & {
+      animation:
+        plan-photo-clip var(--plan-clip) var(--ease-settle) both,
+        enter-fade 360ms var(--ease-settle) both;
+    }
+    .is-inview & img {
+      animation: plan-photo-settle var(--plan-clip) var(--ease-settle) both;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    opacity: 0;
+    .is-inview & {
+      animation: enter-fade 200ms linear both;
+    }
+  }
+}
+
+@utility plan-rule {
+  display: block;
+  width: 40px;
+  height: 1px;
+  background-color: var(--color-gold);
+  transform-origin: left center;
+  @media (prefers-reduced-motion: no-preference) {
+    transform: scaleX(0);
+    .is-inview & {
+      animation: plan-rule-draw 600ms var(--ease-settle) both;
+      animation-delay: var(--delay, 0ms);
+    }
+  }
+}
+
+/* Heading lines and the form block: 24px rise + fade, 600ms Settle (12px on phones; the form only fades there). */
+@utility plan-enter {
+  --rise: 12px;
+  @media (width >= 48rem) {
+    --rise: 24px;
+  }
+  &.plan-form {
+    --rise: 0px;
+    @media (width >= 48rem) {
+      --rise: 24px;
+    }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    opacity: 0;
+    .is-inview & {
+      animation: enter-rise 600ms var(--ease-settle) both;
+      animation-delay: var(--delay, 0ms);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    opacity: 0;
+    .is-inview & {
+      animation: enter-fade 200ms linear both;
+    }
+  }
+}
+
+/*
+ * DS "Field": 52px, 1px Graphite 70 border, 2px radius, Body MD value (17px).
+ * Focus: 2px Forest border (inset shadow, no layout shift) in 120ms. Error:
+ * 2px Clay. Disabled: Sand Line fill and border.
+ */
+@utility plan-field {
+  display: block;
+  width: 100%;
+  min-height: 52px;
+  padding: 0 16px;
+  border: 1px solid var(--color-graphite-70);
+  border-radius: var(--radius-xs);
+  background-color: var(--color-ivory);
+  color: var(--color-graphite);
+  font-family: var(--font-sans);
+  font-size: 17px;
+  line-height: 1.65;
+  transition:
+    border-color 120ms var(--ease-settle),
+    box-shadow 120ms var(--ease-settle);
+  &::placeholder {
+    color: var(--color-graphite-70);
+    opacity: 1;
+  }
+  &.is-empty {
+    color: var(--color-graphite-70);
+  }
+  &::-webkit-calendar-picker-indicator {
+    opacity: 0.7;
+    cursor: pointer;
+  }
+  &:focus,
+  &:focus-visible {
+    outline: none;
+    border-color: var(--color-forest);
+    box-shadow: inset 0 0 0 1px var(--color-forest);
+  }
+  &[aria-invalid='true'] {
+    border-color: var(--color-clay);
+    box-shadow: inset 0 0 0 1px var(--color-clay);
+  }
+  &:disabled {
+    border-color: var(--color-sand-line);
+    background-color: var(--color-sand-line);
+    color: var(--color-graphite-70);
+    cursor: not-allowed;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+}
+
+@utility plan-textarea {
+  min-height: 112px;
+  padding-top: 14px;
+  padding-bottom: 14px;
+  resize: vertical;
+}
+
+/*
+ * DS "Choice Chip": 48px, 18px side padding, 1px Graphite 70 border, Label 16
+ * Medium. Hover (fine pointer): Sand. Selected: Forest fill, Ivory label and a
+ * check. Keyboard focus: the DS ring (2px, 3px offset).
+ */
+@utility plan-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 0 18px;
+  border: 1px solid var(--color-graphite-70);
+  border-radius: var(--radius-xs);
+  color: var(--color-graphite);
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: 16px;
+  line-height: 1.2;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  user-select: none;
+  transition:
+    background-color 200ms var(--ease-settle),
+    border-color 200ms var(--ease-settle),
+    color 200ms var(--ease-settle);
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      background-color: var(--color-sand);
+    }
+  }
+  &:has(:focus-visible) {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 3px;
+  }
+  &:has(:checked),
+  &[aria-pressed='true'] {
+    border-color: var(--color-forest);
+    background-color: var(--color-forest);
+    color: var(--color-ivory);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+}
+
+@utility plan-chip-check {
+  display: none;
+  flex-shrink: 0;
+  :checked ~ &,
+  [aria-pressed='true'] > & {
+    display: block;
   }
 }
