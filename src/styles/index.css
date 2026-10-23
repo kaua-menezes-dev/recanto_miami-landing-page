@@ -422,6 +422,19 @@
  * `data-gallery` (set by useHorizontalGallery): `linked` clips the row and lets
  * JS translate it; `native` makes it a contained horizontal scroller.
  */
+/*
+ * Linked mode pins the stage (gallery + rail) with native sticky positioning;
+ * useHorizontalGallery sets `top` (centred) and sizes the spacer that follows.
+ * Opaque so the intro never shows through while it scrolls away above.
+ */
+@utility spaces-stage {
+  .spaces[data-gallery='linked'] & {
+    position: sticky;
+    z-index: 1;
+    background-color: var(--surface-base);
+  }
+}
+
 @utility spaces-viewport {
   overflow: hidden;
   .spaces[data-gallery='native'] & {

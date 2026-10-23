@@ -56,7 +56,7 @@ const total = String(PHOTOS.length).padStart(2, '0')
  * horizontal scroller instead. No CTA: this section is about discovery.
  */
 export function Spaces() {
-  const { mode, viewportRef, trackRef, railRef, counterRef, prevRef, nextRef, step } = useHorizontalGallery()
+  const { mode, stageRef, spacerRef, viewportRef, trackRef, railRef, counterRef, prevRef, nextRef, step } = useHorizontalGallery()
   const native = mode === 'native'
 
   return (
@@ -83,66 +83,72 @@ export function Spaces() {
         </p>
       </div>
 
-      <div
-        ref={viewportRef}
-        className="spaces-viewport mt-8 md:mt-12 lg:mt-16"
-        {...(native ? { tabIndex: 0, role: 'region', 'aria-label': 'Galeria dos ambientes (role para os lados)' } : {})}
-      >
-        <ul ref={trackRef} className="spaces-track" aria-label="Ambientes do Recanto Miami">
-          {PHOTOS.map((photo, index) => (
-            <li key={photo.file} className="spaces-item">
-              <figure>
-                <div className="spaces-frame" style={{ '--ratio': photo.ratio } as CSSProperties}>
-                  <img
-                    src={`${SRC}/${photo.file}-1280.webp`}
-                    srcSet={`${SRC}/${photo.file}-828.webp 828w, ${SRC}/${photo.file}-1280.webp 1280w, ${SRC}/${photo.file}-1920.webp 1920w`}
-                    sizes="(min-width: 64rem) 1160px, (min-width: 48rem) 880px, 330px"
-                    width={1920}
-                    height={1280}
-                    loading={index < 2 ? 'eager' : 'lazy'}
-                    decoding="async"
-                    draggable={false}
-                    alt={photo.alt}
-                    className="spaces-image"
-                    style={{ objectPosition: photo.position }}
-                  />
-                </div>
-                <figcaption className="mt-4 flex items-center gap-3">
-                  <span className="text-text-accent type-eyebrow tabular-nums">{String(index + 1).padStart(2, '0')}</span>
-                  <span className="text-text-secondary type-caption">{photo.name}</span>
-                </figcaption>
-              </figure>
-            </li>
-          ))}
-        </ul>
+      {/* Sticky in linked mode: gallery + rail stay centred while the track travels. */}
+      <div ref={stageRef} className="spaces-stage mt-8 md:mt-12 lg:mt-16">
+        <div
+          ref={viewportRef}
+          className="spaces-viewport"
+          {...(native ? { tabIndex: 0, role: 'region', 'aria-label': 'Galeria dos ambientes (role para os lados)' } : {})}
+        >
+          <ul ref={trackRef} className="spaces-track" aria-label="Ambientes do Recanto Miami">
+            {PHOTOS.map((photo, index) => (
+              <li key={photo.file} className="spaces-item">
+                <figure>
+                  <div className="spaces-frame" style={{ '--ratio': photo.ratio } as CSSProperties}>
+                    <img
+                      src={`${SRC}/${photo.file}-1280.webp`}
+                      srcSet={`${SRC}/${photo.file}-828.webp 828w, ${SRC}/${photo.file}-1280.webp 1280w, ${SRC}/${photo.file}-1920.webp 1920w`}
+                      sizes="(min-width: 64rem) 1160px, (min-width: 48rem) 880px, 330px"
+                      width={1920}
+                      height={1280}
+                      loading={index < 2 ? 'eager' : 'lazy'}
+                      decoding="async"
+                      draggable={false}
+                      alt={photo.alt}
+                      className="spaces-image"
+                      style={{ objectPosition: photo.position }}
+                    />
+                  </div>
+                  <figcaption className="mt-4 flex items-center gap-3">
+                    <span className="text-text-accent type-eyebrow tabular-nums">{String(index + 1).padStart(2, '0')}</span>
+                    <span className="text-text-secondary type-caption">{photo.name}</span>
+                  </figcaption>
+                </figure>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div className="mx-auto mt-5 flex w-full max-w-[1440px] items-center gap-6 px-5 md:mt-6 md:px-10 lg:mt-8 lg:px-20">
+          <div aria-hidden="true" className="flex h-6 flex-1 items-center gap-6">
+            <span className="relative h-px flex-1 bg-border-subtle">
+              <span ref={railRef} className="spaces-rail-active" />
+            </span>
+            <span className="text-text-secondary type-eyebrow tabular-nums">
+              <span ref={counterRef}>01</span> / {total}
+            </span>
+          </div>
+          {native && (
+            <div className="hidden gap-3 md:flex">
+              <button
+                ref={prevRef}
+                type="button"
+                aria-label="Ambiente anterior"
+                onClick={() => step(-1)}
+                className="spaces-step"
+              >
+                <ArrowLeft aria-hidden="true" size={20} strokeWidth={1.5} />
+              </button>
+              <button ref={nextRef} type="button" aria-label="Próximo ambiente" onClick={() => step(1)} className="spaces-step">
+                <ArrowRight aria-hidden="true" size={20} strokeWidth={1.5} />
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
-      <div className="mx-auto mt-5 flex w-full max-w-[1440px] items-center gap-6 px-5 md:mt-6 md:px-10 lg:mt-8 lg:px-20">
-        <div aria-hidden="true" className="flex h-6 flex-1 items-center gap-6">
-          <span className="relative h-px flex-1 bg-border-subtle">
-            <span ref={railRef} className="spaces-rail-active" />
-          </span>
-          <span className="text-text-secondary type-eyebrow tabular-nums">
-            <span ref={counterRef}>01</span> / {total}
-          </span>
-        </div>
-        {native && (
-          <div className="hidden gap-3 md:flex">
-            <button
-              ref={prevRef}
-              type="button"
-              aria-label="Ambiente anterior"
-              onClick={() => step(-1)}
-              className="spaces-step"
-            >
-              <ArrowLeft aria-hidden="true" size={20} strokeWidth={1.5} />
-            </button>
-            <button ref={nextRef} type="button" aria-label="Próximo ambiente" onClick={() => step(1)} className="spaces-step">
-              <ArrowRight aria-hidden="true" size={20} strokeWidth={1.5} />
-            </button>
-          </div>
-        )}
-      </div>
+      {/* Pinned scroll distance (linked mode only; sized by useHorizontalGallery). */}
+      <div ref={spacerRef} aria-hidden="true" />
 
       {native && (
         <p className="mx-auto mt-3 flex w-full items-center gap-2 px-5 text-text-secondary type-caption md:hidden">

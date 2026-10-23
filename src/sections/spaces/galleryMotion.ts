@@ -24,6 +24,18 @@ export function smoothTowards(current: number, target: number, elapsedMs: number
 }
 
 /**
+ * Keeps the smoothed position from lagging past the pin: the gap between the
+ * drawn position and the scroll target may never exceed the pinned scroll that
+ * remains in that direction. The lerp keeps its feel mid-journey, but the track
+ * is guaranteed to be at its end when the pin releases at either edge.
+ */
+export function limitLag(current: number, target: number, scrollY: number, pinStart: number, pinEnd: number) {
+  if (current < target) return Math.max(current, target - Math.max(0, pinEnd - scrollY))
+  if (current > target) return Math.min(current, target + Math.max(0, scrollY - pinStart))
+  return current
+}
+
+/**
  * Inner parallax as in the reference: a photo centred in the viewport sits at 0;
  * at one half-viewport away it is shifted by the full overscan, in % of the
  * image's own (overscanned) width, so the frame edge is never exposed.

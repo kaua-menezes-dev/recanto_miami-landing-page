@@ -1,10 +1,17 @@
 import { useCallback, useEffect, useRef, useSyncExternalStore } from 'react'
-import { clamp, parallaxPercent, scrollProgress, smoothTowards } from './galleryMotion'
+import { clamp, limitLag, parallaxPercent, scrollProgress, smoothTowards } from './galleryMotion'
 
 export type GalleryMode = 'linked' | 'native'
 
-/** Scroll-linked motion only where it is comfortable: fine pointer, tablet width up, motion allowed. */
-const LINKED_QUERY = '(min-width: 48rem) and (pointer: fine) and (prefers-reduced-motion: no-preference)'
+/**
+ * Pinned, scroll-linked motion only where it is comfortable: fine pointer, tablet
+ * width up, enough height to hold the stage, motion allowed.
+ */
+const LINKED_QUERY =
+  '(min-width: 48rem) and (min-height: 32rem) and (pointer: fine) and (prefers-reduced-motion: no-preference)'
+
+/** Pinned scroll after the last photo has arrived (× viewport height), so the final composition is seen at rest. */
+const END_HOLD = 0.2
 
 function subscribeMode(onChange: () => void) {
   const query = window.matchMedia(LINKED_QUERY)
@@ -18,24 +25,32 @@ const getServerMode = (): GalleryMode => 'native'
 /**
  * Section 03 panoramic gallery.
  *
- * `linked` (desktop/tablet with a mouse or trackpad): the page keeps its natural
- * vertical scroll and the track is translated horizontally from scroll progress.
- * Progress runs 0 → 1 from the gallery's top edge entering the viewport to its
- * bottom edge leaving it (approved Figma spec), clamped to the page's last scroll
- * position so the final photo always arrives. As in the reference, the translation
- * follows its target through a frame-rate independent lerp and every photo drifts
- * inside its frame (±8% overscan) by its distance from the viewport centre.
- * No pinning, no wheel interception, no scroll-jacking.
+ * `linked` (desktop/tablet with a mouse or trackpad): pinned horizontal journey.
+ * The stage (gallery + rail) is `position: sticky`, centred in the viewport, and a
+ * spacer after it adds exactly the pinned scroll distance: the measured travel
+ * (track width − visible width, 1px of scroll per px of travel) plus a short hold
+ * at the end. The page scrolls natively the whole time — no wheel handling, no
+ * scroll writes; the pin is plain CSS, so it starts and releases without a jump.
+ * Progress is 0 until the stage reaches its centred position (the first photo
+ * stays on the content margin while Section 02 and the intro are read) and 1 when
+ * the travel is consumed. As in the reference, the translation follows its target
+ * through a frame-rate independent lerp and every photo drifts inside its frame
+ * (±8% overscan) by its distance from the viewport centre; `limitLag` keeps the
+ * lerp from trailing past either end of the pin, so the last photo is in place
+ * before the pin releases and the first one is back home when scrolling up.
  *
- * Layout is measured only on mount and resize; scroll and animation frames read
- * `scrollY` and cached offsets and write transforms directly, so React never
- * re-renders while scrolling. The loop sleeps once the track has settled.
+ * Layout is measured only on mount and resize (body, track and stage observed);
+ * scroll and animation frames read `scrollY` and cached numbers and write
+ * transforms directly, so React never re-renders while scrolling. The loop sleeps
+ * once the track has settled.
  *
  * `native` (touch devices, phones, reduced motion): no transforms. The gallery is a
  * native horizontal scroller; the rail, counter and prev/next buttons follow it.
  */
 export function useHorizontalGallery() {
   const mode = useSyncExternalStore(subscribeMode, getMode, getServerMode)
+  const stageRef = useRef<HTMLDivElement>(null)
+  const spacerRef = useRef<HTMLDivElement>(null)
   const viewportRef = useRef<HTMLDivElement>(null)
   const trackRef = useRef<HTMLUListElement>(null)
   const railRef = useRef<HTMLSpanElement>(null)
@@ -95,19 +110,23 @@ export function useHorizontalGallery() {
       }
     }
 
-    // ---------- linked ----------
+    // ---------- linked (pinned) ----------
+    const stage = stageRef.current
+    const spacer = spacerRef.current
+    if (!stage || !spacer) return
+
     let frame = 0
     let lastTime = 0
     let current = 0
     let target = 0
     let travel = 0
-    let start = 0
-    let end = 1
+    let pinStart = 0
+    let pinEnd = 0
     let viewportWidth = 0
     let centers: number[] = []
 
     const readTarget = () => {
-      target = scrollProgress(window.scrollY, start, end) * travel
+      target = scrollProgress(window.scrollY, pinStart, pinStart + travel) * travel
     }
 
     const render = () => {
@@ -124,7 +143,7 @@ export function useHorizontalGallery() {
     const tick = (time: number) => {
       const elapsed = lastTime ? Math.min(64, time - lastTime) : 16.67
       lastTime = time
-      current = smoothTowards(current, target, elapsed)
+      current = limitLag(smoothTowards(current, target, elapsed), target, window.scrollY, pinStart, pinEnd)
       render()
       if (current !== target) {
         frame = requestAnimationFrame(tick)
@@ -143,15 +162,30 @@ export function useHorizontalGallery() {
       wake()
     }
 
+    let lastSpacer = ''
+    let lastTop = ''
+
     const measure = () => {
-      const rect = viewport.getBoundingClientRect()
-      const top = rect.top + window.scrollY
       const viewportHeight = window.innerHeight
-      const maxScroll = document.documentElement.scrollHeight - viewportHeight
+      const stageHeight = stage.offsetHeight
       viewportWidth = viewport.clientWidth
-      travel = Math.max(0, track.offsetWidth - viewportWidth)
-      start = top - viewportHeight
-      end = Math.min(top + rect.height, maxScroll)
+      // The track carries the page margins as padding, so its full width minus the
+      // visible width puts photo 01 on the left margin at 0 and the last photo on
+      // the right margin at the end.
+      travel = Math.max(0, track.scrollWidth - viewportWidth)
+      const pinTop = Math.max(0, Math.round((viewportHeight - stageHeight) / 2))
+      const distance = Math.round(travel + viewportHeight * END_HOLD)
+
+      // Write only on change: these resize the body, which this observer watches.
+      const top = `${pinTop}px`
+      const height = `${distance}px`
+      if (top !== lastTop) stage.style.top = lastTop = top
+      if (height !== lastSpacer) spacer.style.height = lastSpacer = height
+
+      // The spacer is never stuck, so its document position is stable while pinned.
+      const spacerTop = spacer.getBoundingClientRect().top + window.scrollY
+      pinStart = spacerTop - stageHeight - pinTop
+      pinEnd = pinStart + distance
       centers = items.map((item) => item.offsetLeft + item.offsetWidth / 2)
       readTarget()
     }
@@ -167,12 +201,15 @@ export function useHorizontalGallery() {
     })
     resizeObserver.observe(document.body)
     resizeObserver.observe(track)
+    resizeObserver.observe(stage)
     window.addEventListener('scroll', onScroll, { passive: true })
 
     return () => {
       resizeObserver.disconnect()
       window.removeEventListener('scroll', onScroll)
       if (frame) cancelAnimationFrame(frame)
+      stage.style.removeProperty('top')
+      spacer.style.removeProperty('height')
       track.style.removeProperty('transform')
       for (const image of images) image?.style.removeProperty('transform')
     }
@@ -188,5 +225,5 @@ export function useHorizontalGallery() {
     viewport.scrollBy({ left: direction * (first.offsetWidth + gap), behavior: reduced ? 'auto' : 'smooth' })
   }, [])
 
-  return { mode, viewportRef, trackRef, railRef, counterRef, prevRef, nextRef, step }
+  return { mode, stageRef, spacerRef, viewportRef, trackRef, railRef, counterRef, prevRef, nextRef, step }
 }
