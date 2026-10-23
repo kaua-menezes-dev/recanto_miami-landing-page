@@ -2,7 +2,7 @@
 
 Landing page do **Recanto Miami**, espaço para casamentos, festas e eventos. O objetivo do site é apresentar o espaço real — filme, fotos, casamentos e depoimentos autênticos — e transformar visitantes interessados em **conversas qualificadas no WhatsApp**, com mensagem pré-preenchida e editável.
 
-> **Status atual:** a Seção 01 (Hero + barra de navegação + vídeo de fundo) e a Seção 02 (depoimento + revelação da foto no scroll) estão implementadas. As demais seções estão em fase de design no Figma e **ainda não foram implementadas**. Veja [Status da implementação](#status-da-implementação).
+> **Status atual:** a Seção 01 (Hero + barra de navegação + vídeo de fundo), a Seção 02 (depoimento + revelação da foto no scroll) e a Seção 03 (galeria panorâmica dos espaços) estão implementadas. As demais seções estão em fase de design no Figma e **ainda não foram implementadas**. Veja [Status da implementação](#status-da-implementação).
 
 ## Objetivo de negócio
 
@@ -139,11 +139,13 @@ Ainda **não** verificado: comportamento com `prefers-reduced-motion` e Save-Dat
 |---|---|---|
 | 01 — Hero + navegação | Aprovado (rev. 2) | **Implementado** |
 | 02 — O Recanto (depoimento) | Aprovado (rev. 1) | **Implementado** |
-| 03 a 08 | Em andamento | Não iniciado |
+| 03 — Nossos Espaços (galeria panorâmica) | Aprovado (rev. 1) | **Implementado** |
+| 04 a 08 | Em andamento | Não iniciado |
 
 Pendências conhecidas:
 
-- **Seção 02:** confirmar que o depoimento é de um evento do Recanto Miami e que a noiva autorizou o uso; confirmar os direitos da foto `cerimonia-altar`. O CTA "Conheça nossos espaços" aponta para `#espacos`, que passa a funcionar com a Seção 03.
+- **Seção 02:** confirmar que o depoimento é de um evento do Recanto Miami e que a noiva autorizou o uso; confirmar os direitos da foto `cerimonia-altar`. O CTA "Conheça nossos espaços" aponta para `#espacos` (Seção 03).
+- **Seção 03:** confirmar os direitos das fotos `jardim-vista`, `cerimonia-corredor`, `piscina` e `salao` (cópias WebP do site atual; originais em alta resolução seriam preferíveis). Enquanto a Seção 03 for a última da página, o movimento horizontal termina no fim da rolagem e fica mais rápido que o especificado (~1,6 px por px); o ritmo aprovado volta sozinho quando a próxima seção existir.
 
 - **WhatsApp:** número (`+55 11 98946-4713`) e mensagem de orçamento foram copiados do site oficial atual e aguardam confirmação do proprietário (`src/config/contact.ts`).
 - **Logo oficial:** ainda não fornecido; a navegação usa o nome "Recanto Miami" em Bodoni Moda.
