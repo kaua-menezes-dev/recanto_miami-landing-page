@@ -1633,6 +1633,15 @@
   }
 }
 
+/*
+ * Column loop — reproduces 21st.dev Testimonial V2: each track moves up by one
+ * copy of its cards (translateY −100% / --copies), linearly and forever, inside
+ * a window with a 10% top/bottom fade. The window is as tall as the tallest
+ * approved column (788px desktop, 1256px tablet), so the section keeps its
+ * size, and the loop starts at the Figma rest offsets (padding-top below).
+ * Runs only on screen; pauses on hover, keyboard focus and the pause button.
+ * Phones and reduced motion keep the static masonry (one copy, no window).
+ */
 @utility testimonials-grid {
   display: flex;
   align-items: flex-start;
@@ -1646,34 +1655,29 @@
     max-width: 1062px;
     gap: 24px;
   }
+  &[data-looping] {
+    overflow: hidden;
+    mask-image: linear-gradient(to bottom, transparent, black 10%, black 90%, transparent);
+  }
+  &[data-looping][data-columns='2'] {
+    height: 1256px;
+  }
+  &[data-looping][data-columns='3'] {
+    height: 788px;
+  }
 }
 
-/*
- * Column drift: `--drift` (−1 → 1, 0 when the section is centred) comes from
- * useColumnDrift; each column scales it by its own amplitude. Desktop: A ±12px,
- * B 0 (follows the page), C ±6px. Tablet: only column B, ±8px, and only with a
- * fine pointer. Phones and reduced motion: no drift. Rest offsets (padding-top)
- * are static, so only `transform` changes while scrolling.
- */
+@keyframes testimonials-loop {
+  to {
+    transform: translate3d(0, calc(-100% / var(--copies, 1)), 0);
+  }
+}
+
 @utility testimonials-column {
-  --drift-amp: 0px;
-  display: flex;
   flex: 1 1 0;
   min-width: 0;
-  flex-direction: column;
-  gap: 16px;
-  transform: translate3d(0, calc(var(--drift, 0) * var(--drift-amp)), 0);
-  [data-drifting] & {
-    will-change: transform;
-  }
-  [data-columns='2'] & {
-    gap: 20px;
-  }
   [data-columns='2'] &[data-col='1'] {
     padding-top: 64px;
-  }
-  [data-columns='3'] & {
-    gap: 24px;
   }
   [data-columns='3'] &[data-col='0'] {
     padding-top: 64px;
@@ -1681,18 +1685,51 @@
   [data-columns='3'] &[data-col='2'] {
     padding-top: 32px;
   }
-  @media (prefers-reduced-motion: no-preference) {
-    @media (pointer: fine) {
-      [data-columns='2'] &[data-col='1'] {
-        --drift-amp: 8px;
-      }
+}
+
+@utility testimonials-track {
+  --gap: 16px;
+  --loop-duration: 15s;
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+  [data-columns='2'] & {
+    --gap: 20px;
+  }
+  [data-columns='3'] & {
+    --gap: 24px;
+  }
+  /* Reference durations per column: 15s / 19s / 17s; tablet copies are ~1.6× taller. */
+  [data-columns='3'] [data-col='1'] & {
+    --loop-duration: 19s;
+  }
+  [data-columns='3'] [data-col='2'] & {
+    --loop-duration: 17s;
+  }
+  [data-columns='2'] [data-col='0'] & {
+    --loop-duration: 24s;
+  }
+  [data-columns='2'] [data-col='1'] & {
+    --loop-duration: 30s;
+  }
+  [data-looping] & {
+    /* Trailing gap so one copy is exactly 1 / --copies of the track. */
+    padding-bottom: var(--gap);
+    will-change: transform;
+    animation: testimonials-loop var(--loop-duration) linear infinite;
+    animation-play-state: paused;
+  }
+  [data-onscreen] [data-looping]:not([data-paused], :focus-within) & {
+    animation-play-state: running;
+  }
+  /* Hover pauses for reading, only where hover is real (no sticky tap-hover). */
+  @media (hover: hover) {
+    [data-onscreen] [data-looping]:hover & {
+      animation-play-state: paused;
     }
-    [data-columns='3'] &[data-col='0'] {
-      --drift-amp: 12px;
-    }
-    [data-columns='3'] &[data-col='2'] {
-      --drift-amp: 6px;
-    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
   }
 }
 

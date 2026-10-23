@@ -1,16 +1,22 @@
-import type { CSSProperties } from 'react'
+import { Pause, Play } from 'lucide-react'
+import { useState, type CSSProperties } from 'react'
 import { useInViewOnce } from '../intro/useScrollReveal'
 import { COLUMNS, TESTIMONIALS, type Testimonial } from './testimonialData'
-import { useCardReveal, useColumnCount, useColumnDrift } from './useTestimonialsMotion'
+import { LOOP_COPIES } from './testimonialsMotion'
+import { useCardReveal, useColumnCount, useLoopVisibility, useReducedMotion } from './useTestimonialsMotion'
 
 const delay = (ms: number) => ({ '--delay': `${ms}ms` }) as CSSProperties
 const byId = new Map(TESTIMONIALS.map((testimonial) => [testimonial.id, testimonial]))
 
-function TestimonialCard({ testimonial }: { testimonial: Testimonial }) {
+function TestimonialCard({ testimonial, copy }: { testimonial: Testimonial; copy: number }) {
   const { featured } = testimonial
   return (
     <figure
       data-reveal={testimonial.id}
+      data-copy={copy}
+      // Copies after the first only close the loop: hidden from assistive tech and focus.
+      aria-hidden={copy > 0 || undefined}
+      inert={copy > 0}
       className={`testimonials-card flex flex-col gap-3 ${featured ? 'bg-forest text-ivory' : 'bg-ivory text-text-primary'}`}
     >
       <p className={`type-testimonial-title ${featured ? 'text-ivory' : 'text-text-heading'}`}>{testimonial.title}</p>
@@ -27,20 +33,29 @@ function TestimonialCard({ testimonial }: { testimonial: Testimonial }) {
 
 /**
  * Section 06 — Depoimentos (Figma: "Testimonials / Desktop 1440", "Tablet 768",
- * "Mobile 390", rev 2). A compact masonry of six real testimonials, inspired by
- * 21st.dev Testimonial V2: the columns drift by a few pixels at different rates
- * as the page scrolls (no loop, no pinning) and the cards enter once, staggered.
- * No CTA — this section is social proof only.
+ * "Mobile 390", rev 2). A compact masonry of six real testimonials.
+ *
+ * Motion reproduces 21st.dev Testimonial V2 (inspected in its preview bundle):
+ * each column is a list that moves up by one copy of its cards, linearly and
+ * forever (15s / 19s / 17s), rendered several times so the loop is seamless,
+ * inside a window with a 10% top/bottom fade. Here the window is as tall as the
+ * approved composition, the loop starts from the Figma rest offsets, and it
+ * pauses on hover, focus, the pause button (WCAG 2.2.2) and when off-screen.
+ * Phones and reduced motion keep the static masonry. No CTA.
  */
 export function Testimonials() {
   const { ref: headingRef, inView } = useInViewOnce<HTMLDivElement>()
   const columnCount = useColumnCount()
-  const driftRef = useColumnDrift<HTMLElement>()
-  const gridRef = useCardReveal<HTMLDivElement>(columnCount)
+  const reducedMotion = useReducedMotion()
+  const looping = columnCount > 1 && !reducedMotion
+  const copies = looping ? LOOP_COPIES : 1
+  const [paused, setPaused] = useState(false)
+  const sectionRef = useLoopVisibility<HTMLElement>(looping)
+  const gridRef = useCardReveal<HTMLDivElement>(`${columnCount}-${copies}`)
 
   return (
     <section
-      ref={driftRef}
+      ref={sectionRef}
       id="depoimentos"
       aria-labelledby="testimonials-title"
       className="testimonials mode-day bg-sand pb-24 pt-16 text-text-primary md:pb-32 md:pt-24 xl:pb-40 xl:pt-32"
@@ -66,15 +81,47 @@ export function Testimonials() {
           </p>
         </div>
 
-        <div ref={gridRef} data-columns={columnCount} className="testimonials-grid">
-          {COLUMNS[columnCount].map((column, index) => (
-            <div key={`${columnCount}-${index}`} data-col={index} className="testimonials-column">
-              {column.map((id) => {
-                const testimonial = byId.get(id)
-                return testimonial ? <TestimonialCard key={id} testimonial={testimonial} /> : null
-              })}
-            </div>
-          ))}
+        <div className="flex w-full flex-col items-center gap-8">
+          <div
+            ref={gridRef}
+            data-columns={columnCount}
+            data-looping={looping || undefined}
+            data-paused={paused || undefined}
+            className="testimonials-grid"
+          >
+            {COLUMNS[columnCount].map((column, index) => (
+              <div key={`${columnCount}-${index}`} data-col={index} className="testimonials-column">
+                <div className="testimonials-track" style={{ '--copies': copies } as CSSProperties}>
+                  {Array.from({ length: copies }, (_, copy) =>
+                    column.map((id) => {
+                      const testimonial = byId.get(id)
+                      return testimonial ? (
+                        <TestimonialCard key={`${id}-${copy}`} testimonial={testimonial} copy={copy} />
+                      ) : null
+                    }),
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {looping && (
+            <button
+              type="button"
+              onClick={() => setPaused((value) => !value)}
+              aria-pressed={paused}
+              className="group flex items-center gap-3 rounded-full text-text-secondary type-caption"
+            >
+              <span className="flex size-11 items-center justify-center rounded-full border border-border-strong text-text-heading transition-colors duration-200 ease-settle group-hover:bg-action-primary-bg group-hover:text-action-primary-fg">
+                {paused ? (
+                  <Play aria-hidden="true" size={20} strokeWidth={1.5} />
+                ) : (
+                  <Pause aria-hidden="true" size={20} strokeWidth={1.5} />
+                )}
+              </span>
+              {paused ? 'Retomar depoimentos' : 'Pausar depoimentos'}
+            </button>
+          )}
         </div>
       </div>
     </section>

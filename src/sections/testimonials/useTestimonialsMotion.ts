@@ -1,107 +1,58 @@
 import { useEffect, useRef, useSyncExternalStore } from 'react'
 import type { ColumnCount } from './testimonialData'
-import { REVEAL_STAGGER_MS, driftFactor, revealOrder, sectionProgress } from './testimonialsMotion'
+import { REVEAL_STAGGER_MS, revealOrder } from './testimonialsMotion'
 
 const DESKTOP = '(min-width: 80rem)'
 const TABLET = '(min-width: 48rem)'
+const REDUCED_MOTION = '(prefers-reduced-motion: reduce)'
 
-const subscribe = (onChange: () => void) => {
-  const queries = [DESKTOP, TABLET].map((query) => window.matchMedia(query))
-  queries.forEach((query) => query.addEventListener('change', onChange))
-  return () => queries.forEach((query) => query.removeEventListener('change', onChange))
+const subscribeTo = (queries: string[]) => (onChange: () => void) => {
+  const lists = queries.map((query) => window.matchMedia(query))
+  lists.forEach((list) => list.addEventListener('change', onChange))
+  return () => lists.forEach((list) => list.removeEventListener('change', onChange))
 }
 
+const subscribeColumns = subscribeTo([DESKTOP, TABLET])
 const getColumnCount = (): ColumnCount =>
   window.matchMedia(DESKTOP).matches ? 3 : window.matchMedia(TABLET).matches ? 2 : 1
 
 /** Masonry column count: 3 from 1280px (desktop frame), 2 from 768px, 1 on phones. */
 export function useColumnCount() {
-  return useSyncExternalStore(subscribe, getColumnCount, () => 3 as ColumnCount)
+  return useSyncExternalStore(subscribeColumns, getColumnCount, () => 3 as ColumnCount)
+}
+
+const subscribeReducedMotion = subscribeTo([REDUCED_MOTION])
+const getReducedMotion = () => window.matchMedia(REDUCED_MOTION).matches
+
+export function useReducedMotion() {
+  return useSyncExternalStore(subscribeReducedMotion, getReducedMotion, () => false)
 }
 
 /**
- * Scroll-linked column drift (Figma "Storyboard / Drift / S1–S3").
- *
- * Writes `--drift` (−1 → 1) on the element; each column turns it into its own
- * translateY via `--drift-amp` in CSS, so React never re-renders while scrolling
- * and only `transform` changes. The scroll listener is attached only while the
- * section is near the viewport and reads layout once per animation frame.
- * Reduced motion: `--drift` stays at 0 (rest offsets) and nothing is listened to.
+ * Runs the column loop only while the section is near the viewport: toggles
+ * `data-onscreen`, which CSS uses for `animation-play-state`. The loop itself is
+ * a CSS animation on `transform`, so nothing runs on the main thread per frame.
  */
-export function useColumnDrift<T extends HTMLElement>() {
+export function useLoopVisibility<T extends HTMLElement>(enabled: boolean) {
   const ref = useRef<T>(null)
 
   useEffect(() => {
     const el = ref.current
-    if (!el) return
-
-    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)')
-    let frame = 0
-    let listening = false
-
-    const update = () => {
-      frame = 0
-      const rect = el.getBoundingClientRect()
-      const viewport = window.innerHeight
-      const remaining = document.documentElement.scrollHeight - viewport - window.scrollY
-      const drift = driftFactor(sectionProgress(rect.top, rect.height, viewport, remaining))
-      el.style.setProperty('--drift', drift.toFixed(4))
-    }
-
-    const schedule = () => {
-      if (!frame) frame = requestAnimationFrame(update)
-    }
-
-    const startListening = () => {
-      if (listening) return
-      listening = true
-      el.dataset.drifting = ''
-      window.addEventListener('scroll', schedule, { passive: true })
-      window.addEventListener('resize', schedule, { passive: true })
-    }
-
-    const stopListening = () => {
-      if (!listening) return
-      listening = false
-      delete el.dataset.drifting
-      window.removeEventListener('scroll', schedule)
-      window.removeEventListener('resize', schedule)
-    }
-
+    if (!el || !enabled) return
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (!entry) return
-        if (entry.isIntersecting) startListening()
-        else stopListening()
-        // Settle exactly at −1 or 1 after a fast scroll past the section.
-        schedule()
+        if (entry.isIntersecting) el.dataset.onscreen = ''
+        else delete el.dataset.onscreen
       },
       { rootMargin: '10% 0px' },
     )
-
-    const apply = () => {
-      observer.disconnect()
-      stopListening()
-      if (frame) cancelAnimationFrame(frame)
-      frame = 0
-      if (reducedMotion.matches) {
-        el.style.setProperty('--drift', '0')
-        return
-      }
-      update()
-      observer.observe(el)
-    }
-
-    apply()
-    reducedMotion.addEventListener('change', apply)
-
+    observer.observe(el)
     return () => {
-      reducedMotion.removeEventListener('change', apply)
       observer.disconnect()
-      stopListening()
-      if (frame) cancelAnimationFrame(frame)
+      delete el.dataset.onscreen
     }
-  }, [])
+  }, [enabled])
 
   return ref
 }
@@ -110,11 +61,13 @@ export function useColumnDrift<T extends HTMLElement>() {
  * One-shot staggered entrance for the cards (`[data-reveal]` descendants).
  *
  * A single IntersectionObserver marks each card `data-revealed` the first time
- * it enters; cards entering together are staggered in reading order. Revealed
- * ids are remembered, so a layout change (columns re-render on resize) never
- * replays the entrance. Attribute writes only — no React state.
+ * it enters; cards entering together are staggered in reading order. Only the
+ * first copy of a looping column is observed and its duplicates reveal with it,
+ * so cards never fade in again as the loop brings them back. Revealed ids are
+ * remembered, so a layout change never replays the entrance. Attribute writes
+ * only — no React state.
  */
-export function useCardReveal<T extends HTMLElement>(layoutKey: ColumnCount) {
+export function useCardReveal<T extends HTMLElement>(layoutKey: string) {
   const ref = useRef<T>(null)
   const revealed = useRef(new Set<string>())
 
@@ -123,10 +76,13 @@ export function useCardReveal<T extends HTMLElement>(layoutKey: ColumnCount) {
     if (!root) return
 
     const cards = Array.from(root.querySelectorAll<HTMLElement>('[data-reveal]'))
-    const show = (card: HTMLElement, delay: number) => {
-      card.style.setProperty('--reveal-delay', `${delay}ms`)
-      card.dataset.revealed = ''
-      revealed.current.add(card.dataset.reveal ?? '')
+    const show = (id: string, delay: number) => {
+      revealed.current.add(id)
+      for (const card of cards) {
+        if (card.dataset.reveal !== id) continue
+        card.style.setProperty('--reveal-delay', `${delay}ms`)
+        card.dataset.revealed = ''
+      }
     }
 
     const observer = new IntersectionObserver(
@@ -139,7 +95,7 @@ export function useCardReveal<T extends HTMLElement>(layoutKey: ColumnCount) {
             left: entry.boundingClientRect.left,
           }))
         revealOrder(entering).forEach(({ card }, index) => {
-          show(card, index * REVEAL_STAGGER_MS)
+          show(card.dataset.reveal ?? '', index * REVEAL_STAGGER_MS)
           observer.unobserve(card)
         })
       },
@@ -147,8 +103,9 @@ export function useCardReveal<T extends HTMLElement>(layoutKey: ColumnCount) {
     )
 
     for (const card of cards) {
-      if (revealed.current.has(card.dataset.reveal ?? '')) show(card, 0)
-      else observer.observe(card)
+      const id = card.dataset.reveal ?? ''
+      if (revealed.current.has(id)) show(id, 0)
+      else if (card.dataset.copy === '0') observer.observe(card)
     }
 
     return () => observer.disconnect()

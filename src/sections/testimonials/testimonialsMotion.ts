@@ -1,23 +1,10 @@
-export const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value))
-
 /**
- * Section progress for the column drift: 0 when the section top reaches the
- * bottom of the viewport, 1 when its bottom leaves the top (Figma S06 notes).
- * `remaining` is the scroll distance left on the page: when the page ends
- * before the section can leave, the range ends at the last reachable position
- * so the full drift still plays.
+ * Copies of each column's cards rendered while looping. The loop moves the list
+ * up by exactly one copy (translateY −100% / copies) and restarts, so the window
+ * must always be covered: column offset + (copies − 1) × copy height ≥ window
+ * height. Three copies cover the desktop (788px) and tablet (1256px) windows.
  */
-export function sectionProgress(top: number, height: number, viewport: number, remaining = Infinity) {
-  const endTop = Math.max(-height, top - remaining)
-  return clamp((viewport - top) / Math.max(1, viewport - endTop), 0, 1)
-}
-
-/**
- * −1 → 1 across the section, 0 when it is centred in the viewport, so the
- * columns sit exactly at their Figma rest offsets in the middle of the pass.
- * Linear on purpose: the visitor's own scroll is the easing.
- */
-export const driftFactor = (progress: number) => clamp(progress, 0, 1) * 2 - 1
+export const LOOP_COPIES = 3
 
 /** Entrance stagger per card revealed in the same batch (Motion token stagger/text). */
 export const REVEAL_STAGGER_MS = 80
