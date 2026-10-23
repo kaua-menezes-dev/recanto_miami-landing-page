@@ -2,7 +2,7 @@
 
 Landing page do **Recanto Miami**, espaço para casamentos, festas e eventos. O objetivo do site é apresentar o espaço real — filme, fotos, casamentos e depoimentos autênticos — e transformar visitantes interessados em **conversas qualificadas no WhatsApp**, com mensagem pré-preenchida e editável.
 
-> **Status atual:** a Seção 01 (Hero + barra de navegação + vídeo de fundo), a Seção 02 (depoimento + revelação da foto no scroll) e a Seção 03 (galeria panorâmica dos espaços) estão implementadas. As demais seções estão em fase de design no Figma e **ainda não foram implementadas**. Veja [Status da implementação](#status-da-implementação).
+> **Status atual:** a Seção 01 (Hero + barra de navegação + vídeo de fundo), a Seção 02 (depoimento + revelação da foto no scroll), a Seção 03 (galeria panorâmica dos espaços) e a Seção 04 (histórias reais — galeria vertical + álbuns dos casamentos) estão implementadas. As demais seções estão em fase de design no Figma e **ainda não foram implementadas**. Veja [Status da implementação](#status-da-implementação).
 
 ## Objetivo de negócio
 
@@ -46,6 +46,7 @@ Configuração opcional: copie `.env.example` para `.env` para sobrescrever o n�
 ├── docs/                       # Documentação aprovada (marca, design, conversão, workflow)
 ├── public/media/hero/          # Renditions web do filme + pôster (gerados do original)
 ├── public/media/intro/         # Foto real da Seção 02 em WebP (16:9, 3:2, 4:5)
+├── public/media/stories/       # 40 fotos reais dos 5 casamentos (WebP 384/828/1280)
 ├── src/
 │   ├── config/
 │   │   ├── site.ts             # Âncoras das seções (ordem do site map)
@@ -57,6 +58,8 @@ Configuração opcional: copie `.env.example` para `.env` para sobrescrever o n�
 │   │   └── ui/                 # ButtonLink, WhatsAppCta, WhatsAppIcon
 │   ├── sections/hero/          # Hero, HeroVideo, useHeroVideo
 │   ├── sections/intro/         # Intro (Seção 02), useScrollReveal
+│   ├── sections/spaces/        # Spaces (Seção 03), useHorizontalGallery
+│   ├── sections/stories/       # Stories (Seção 04), StoryAlbum, useStoriesGallery, dados dos casamentos
 │   └── styles/index.css        # Tokens do Design System, tipografia, overlay e animações
 ├── CLAUDE.md                   # Regras do projeto para o Claude Code
 └── PRODUCT.md                  # Contexto de produto
@@ -133,6 +136,16 @@ Ainda **não** verificado: comportamento com `prefers-reduced-motion` e Save-Dat
 - **Movimento reduzido:** sem crescimento nem escala — a foto aparece no estado final e os textos sem animação de entrada.
 - **Foto:** `cerimonia-altar` (foto profissional do site atual, também usada nos frames do Figma), com recortes por breakpoint via `<picture>` — 16:9 (1280/1920 px), 3:2 (960/1376 px) e 4:5 (640/864 px), WebP de 93 a 258 KB, `loading="lazy"` e `decoding="async"`.
 
+## Seção 04 — Histórias Reais (galeria vertical + álbuns)
+
+- **Referência:** Codrops *Infinite Scroll Gallery with Page Transitions using GSAP* (código estudado). Reproduzido: coluna de fotos de larguras variadas, deslocadas para os lados; revelação da foto (1 s) e da legenda letra a letra (25 ms) ao entrar na tela, repetindo ao voltar; velocidades diferentes por foto suavizadas como o "playhead" da referência; clique isola a foto (as outras somem em 0,5 s) e ela se transforma no álbum (1,2 s, power4.inOut); fechar faz o caminho de volta (1 s).
+- **Adaptação aprovada:** a referência captura a roda do mouse para girar a galeria sem fim. Aqui a página rola normalmente (sem scroll-jacking): o início da sequência reaparece sob um degradê ("costura do loop") e se dissolve no CTA final. As velocidades são por coluna (direita 1,12×, esquerda 0,975×) porque, na composição aprovada, fotos da mesma coluna ficam a até 3 px uma da outra — velocidades individuais as fariam se sobrepor (teste em `storiesMotion.test.ts`).
+- **Composição (Figma):** 10 fotos (2 por casamento) com quadros de 400 px de altura e larguras de 300 a 440 px, posições exatas do frame de 1440; no celular, coluna única escalonada com 7 fotos (todos os casamentos presentes) a cada 477 px.
+- **Interações:** cursor próprio "Ver história" (disco marfim de 104 px que segue o ponteiro com ~120 ms de atraso), foto 1,04 dentro da máscara, véu de 10% e legenda trocando "8 fotos" por "Ver história" em dourado; foco por teclado com anel + selo "Ver história"; toque com o selo sempre visível; pressionado 0,97.
+- **Álbum:** `<dialog>` nativo em modo Evening — foto à esquerda (58%) e painel verde à direita no desktop; tela cheia rolável no celular. Anterior/próxima, miniaturas, ← → no teclado, deslizar no toque, "Próxima história". Fecha por "Voltar às histórias", ×, Esc ou Voltar do navegador; a rolagem da página fica intacta e o foco volta ao card que abriu o álbum.
+- **CTA:** "Agende uma visita" abre o WhatsApp com a mesma mensagem de visita do site atual ("Olá! Gostaria de agendar uma visita ao Recanto Miami.").
+- **Performance:** WebP 384/828/1280 com `srcset`/`sizes`, `loading="lazy"` (exceto as 2 primeiras), dimensões reservadas (sem CLS); profundidade e cursor só com ponteiro fino, ≥768 px e movimento permitido; um único loop rAF que dorme quando estabiliza e só escuta o scroll perto da galeria; medidas apenas no resize; nenhum re-render do React durante o scroll. Movimento reduzido: sem profundidade, escala ou cursor; fotos e legendas já visíveis; álbum com fades de 200 ms.
+
 ## Status da implementação
 
 | Seção | Design (Figma) | Implementação |
@@ -140,12 +153,14 @@ Ainda **não** verificado: comportamento com `prefers-reduced-motion` e Save-Dat
 | 01 — Hero + navegação | Aprovado (rev. 2) | **Implementado** |
 | 02 — O Recanto (depoimento) | Aprovado (rev. 1) | **Implementado** |
 | 03 — Nossos Espaços (galeria panorâmica) | Aprovado (rev. 1) | **Implementado** |
-| 04 a 08 | Em andamento | Não iniciado |
+| 04 — Histórias Reais (galeria + álbuns) | Aprovado (rev. 1) | **Implementado** |
+| 05 a 08 | Em andamento | Não iniciado |
 
 Pendências conhecidas:
 
 - **Seção 02:** confirmar que o depoimento é de um evento do Recanto Miami e que a noiva autorizou o uso; confirmar os direitos da foto `cerimonia-altar`. O CTA "Conheça nossos espaços" aponta para `#espacos` (Seção 03).
-- **Seção 03:** confirmar os direitos das fotos `jardim-vista`, `cerimonia-corredor`, `piscina` e `salao` (cópias WebP do site atual; originais em alta resolução seriam preferíveis). Enquanto a Seção 03 for a última da página, o movimento horizontal termina no fim da rolagem e fica mais rápido que o especificado (~1,6 px por px); o ritmo aprovado volta sozinho quando a próxima seção existir.
+- **Seção 03:** confirmar os direitos das fotos `jardim-vista`, `cerimonia-corredor`, `piscina` e `salao` (cópias WebP do site atual; originais em alta resolução seriam preferíveis).
+- **Seção 04:** confirmar a licença das 40 fotos (crédito @NairobiComunicacao no site atual) e a autorização dos casais; as iniciais (J + M, G + L, N + W, A + I, T + G) são os rótulos já publicados. O relato opcional de cada casal (marcador no Figma) não é exibido até existir texto real autorizado.
 
 - **WhatsApp:** número (`+55 11 98946-4713`) e mensagem de orçamento foram copiados do site oficial atual e aguardam confirmação do proprietário (`src/config/contact.ts`).
 - **Logo oficial:** ainda não fornecido; a navegação usa o nome "Recanto Miami" em Bodoni Moda.
