@@ -95,6 +95,8 @@
   html {
     -webkit-text-size-adjust: 100%;
     text-rendering: optimizeLegibility;
+    /* Keeps the layout still when a modal dialog locks the page scroll. */
+    scrollbar-gutter: stable;
   }
 
   @media (prefers-reduced-motion: no-preference) {
@@ -519,5 +521,442 @@
   &:disabled {
     opacity: 0.35;
     cursor: default;
+  }
+}
+
+/* ---------- Section 04 — Histórias Reais ---------- */
+
+@utility type-body-lg {
+  /* Mobile/Body/LG (18) → Desktop/Body/LG (20) */
+  font-family: var(--font-sans);
+  font-size: 18px;
+  line-height: 1.6;
+  @media (width >= 48rem) {
+    font-size: 20px;
+  }
+}
+
+/* Album title: Mobile/Display/LG (44) → Desktop/Display/LG (80). */
+@utility type-album-title {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 44px;
+  line-height: 1.04;
+  letter-spacing: -0.015em;
+  @media (width >= 64rem) {
+    font-size: 80px;
+  }
+}
+
+/* Next story: Mobile/Heading/H3 (24) → Desktop/Heading/H3 (28). */
+@utility type-album-next {
+  font-family: var(--font-display);
+  font-size: 24px;
+  line-height: 1.15;
+  @media (width >= 64rem) {
+    font-size: 28px;
+  }
+}
+
+/*
+ * Gallery geometry — the approved frames, in container units so the composition
+ * scales with the content width (max 1440). Every photo frame is 400 units tall;
+ * only its width varies.
+ * - Phones (Mobile 390): one staggered column, a card every 477px at 390
+ *   (400 frame + 37 caption + 40 air), 7 cards + the loop-seam clone.
+ * - From 768px (Desktop 1440): x/width from Figma; y stays in px so the
+ *   vertical rhythm (and the air between cards) holds at every width.
+ */
+@utility stories-gallery-wrap {
+  position: relative;
+  max-width: 1440px;
+  margin-inline: auto;
+  container-type: inline-size;
+}
+
+@utility stories-gallery {
+  --step: calc(400 / 390 * 100cqw + 77px);
+  position: relative;
+  height: calc(7 * var(--step) + 200px);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  @media (width >= 48rem) {
+    height: 2960px;
+  }
+}
+
+@utility stories-card {
+  position: absolute;
+  left: calc(var(--mx) / 390 * 100cqw);
+  top: calc(var(--slot) * var(--step));
+  width: calc(var(--mw) / 390 * 100cqw);
+  &[data-phone='hidden'] {
+    display: none;
+  }
+  &[aria-hidden='true'] {
+    pointer-events: none;
+  }
+  @media (width >= 48rem) {
+    left: calc(var(--x) / 1440 * 100cqw);
+    top: calc(var(--y) * 1px);
+    width: calc(var(--w) / 1440 * 100cqw);
+    &[data-phone='hidden'] {
+      display: block;
+    }
+  }
+  @media (width >= 48rem) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+    will-change: transform;
+  }
+  /* Album opening: the other cards fade (reference: 0.5s), back in while it closes. */
+  .stories[data-album] &:not([data-active]) {
+    opacity: 0;
+    transition: opacity 500ms var(--ease-settle);
+  }
+  .stories[data-album='closing'] &:not([data-active]) {
+    opacity: 1;
+    transition-delay: 500ms;
+  }
+}
+
+@utility stories-open {
+  display: block;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  &:focus-visible {
+    outline: none;
+  }
+}
+
+@utility stories-frame {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  background-color: var(--color-sand);
+  aspect-ratio: var(--mw) / 400;
+  /* Reveal (reference): the photo fades in over 1s (power2.out) when the card enters. */
+  opacity: 0;
+  @media (width >= 48rem) {
+    aspect-ratio: var(--w) / 400;
+  }
+  [data-revealed] & {
+    opacity: 1;
+    transition: opacity 1000ms cubic-bezier(0.33, 1, 0.68, 1) var(--reveal-delay, 0ms);
+  }
+  .stories-open:focus-visible & {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 3px;
+  }
+  .stories[data-album] [data-active] & {
+    visibility: hidden;
+  }
+  @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+    cursor: none;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    opacity: 1;
+    transition: none;
+  }
+}
+
+/* Hover (pointer): 1.04 inside the fixed mask, 600ms Settle. Pressed: 0.97, 200ms. */
+@utility stories-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  object-fit: cover;
+  user-select: none;
+  transition: transform 600ms var(--ease-settle);
+  @media (hover: hover) and (pointer: fine) {
+    .stories-open:hover & {
+      transform: scale(1.04);
+    }
+  }
+  .stories-open:active & {
+    transform: scale(0.97);
+    transition-duration: 200ms;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+    .stories-open:hover &,
+    .stories-open:active & {
+      transform: none;
+    }
+  }
+}
+
+/* 25% of overlay/scrim-soft (Deep Night 40%). */
+@utility stories-scrim {
+  position: absolute;
+  inset: 0;
+  background-color: rgb(23 43 36 / 0.4);
+  opacity: 0;
+  transition: opacity 600ms var(--ease-settle);
+  @media (hover: hover) and (pointer: fine) {
+    .stories-open:hover & {
+      opacity: 0.25;
+    }
+  }
+}
+
+/* "Ver história" chip: always on touch screens, on keyboard focus elsewhere. */
+@utility stories-chip {
+  position: absolute;
+  left: 16px;
+  bottom: 16px;
+  display: none;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: var(--radius-xs);
+  background-color: var(--color-forest);
+  color: var(--color-ivory);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: 1.4;
+  @media (hover: none) {
+    display: inline-flex;
+  }
+  .stories-open:focus-visible & {
+    display: inline-flex;
+  }
+}
+
+@utility stories-caption {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 14px;
+  white-space: nowrap;
+  transition: opacity 300ms var(--ease-settle);
+  .stories[data-album] [data-active] & {
+    opacity: 0;
+  }
+  .stories[data-album='closing'] [data-active] & {
+    opacity: 1;
+    transition: opacity 400ms var(--ease-settle) 600ms;
+  }
+}
+
+/* Caption characters appear one after another (reference: 25ms stagger, 200ms after the photo). */
+@utility stories-char {
+  opacity: 0;
+  [data-revealed] & {
+    opacity: 1;
+    transition: opacity 400ms linear calc(var(--reveal-delay, 0ms) + 200ms + var(--ci) * 25ms);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    opacity: 1;
+    transition: none;
+  }
+}
+
+/* Hover swaps the photo count for the gold "Ver história" hint. */
+@utility stories-hint {
+  display: none;
+  @media (hover: hover) and (pointer: fine) {
+    .stories-open:hover & {
+      display: inline;
+    }
+  }
+}
+
+@utility stories-count {
+  @media (hover: hover) and (pointer: fine) {
+    .stories-open:hover & {
+      display: none;
+    }
+  }
+}
+
+/* Loop seam: the restarted sequence dissolves into the page (surface/base 0 → 100%). */
+@utility stories-seam-fade {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  height: 240px;
+  pointer-events: none;
+  background: linear-gradient(to bottom, rgb(247 243 235 / 0), var(--color-ivory) 80%);
+  @media (width >= 48rem) {
+    height: 330px;
+    background: linear-gradient(to bottom, rgb(247 243 235 / 0), var(--color-ivory) 70%);
+  }
+}
+
+/* Cursor / Ver história: 104px Ivory disc, follows the pointer (useStoriesGallery). */
+@utility stories-cursor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 30;
+  display: none;
+  pointer-events: none;
+  @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+    display: block;
+  }
+  .stories[data-album] & {
+    display: none;
+  }
+}
+
+@utility stories-cursor-disc {
+  position: absolute;
+  left: -52px;
+  top: -52px;
+  display: grid;
+  place-items: center;
+  width: 104px;
+  height: 104px;
+  border-radius: 999px;
+  background-color: var(--color-ivory);
+  color: var(--color-forest);
+  white-space: nowrap;
+  opacity: 0;
+  transform: scale(0.6);
+  transition:
+    transform 360ms var(--ease-settle),
+    opacity 200ms var(--ease-settle);
+  [data-active='true'] > & {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ---------- Section 04 album (Evening) ---------- */
+
+/* Icon Button (DS): 52px round. */
+@utility stories-icon-button {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 999px;
+  border: 1px solid var(--border-strong);
+  color: var(--action-secondary-fg);
+  transition: background-color 200ms var(--ease-settle);
+  &:hover {
+    background-color: var(--action-secondary-bg-hover);
+  }
+}
+
+@utility album-thumbs {
+  list-style: none;
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Active thumbnail: full opacity + 2px gold outside stroke; the rest at 45%. */
+@utility album-thumb {
+  display: block;
+  width: 48px;
+  height: 48px;
+  overflow: hidden;
+  opacity: 0.45;
+  transition: opacity 200ms var(--ease-settle);
+  &:hover {
+    opacity: 0.8;
+  }
+  &[aria-current='true'] {
+    opacity: 1;
+    outline: 2px solid var(--color-gold);
+    outline-offset: 0;
+  }
+  &:focus-visible {
+    opacity: 1;
+    outline-offset: 3px;
+  }
+  @media (width >= 64rem) {
+    width: 56px;
+    height: 56px;
+  }
+}
+
+/* Morph stand-in: created by StoryAlbum for the card ↔ stage flight. */
+@utility album-ghost {
+  position: fixed;
+  z-index: 50;
+  margin: 0;
+  max-width: none;
+  object-fit: cover;
+  pointer-events: none;
+}
+
+/* Stage photo: the largest box of its own ratio that fits the area ("contain"), known before load. */
+@utility album-photo-area {
+  container-type: size;
+}
+
+@utility album-photo {
+  width: min(100cqw, 100cqh * var(--ratio));
+  height: auto;
+  aspect-ratio: var(--ratio);
+}
+
+@utility album-photo-enter {
+  animation: enter-fade 360ms var(--ease-settle) both;
+}
+
+@keyframes album-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes album-panel-in {
+  from {
+    opacity: 0;
+    transform: translate3d(40px, 0, 0);
+  }
+}
+
+/*
+ * Phases (data-phase on the dialog). Opening: backdrop fades in under the
+ * morphing photo, the panel slides in at 600ms, the chrome fades in at 800ms
+ * (reference: text from 0.8s). Closing: chrome out in 400ms, backdrop out from
+ * 300ms while the photo flies back. Without a morph (reduced motion, or another
+ * photo is showing) the album simply fades.
+ */
+@utility stories-album {
+  &[data-phase='opening'] {
+    .album-backdrop {
+      animation: enter-fade 700ms var(--ease-settle) 200ms both;
+    }
+    .album-panel-bg {
+      animation: album-panel-in 600ms var(--ease-settle) 600ms both;
+    }
+    .album-chrome {
+      animation: enter-fade 600ms var(--ease-settle) 800ms both;
+    }
+  }
+  &[data-phase='opening'][data-morph='true'] .album-photo,
+  &[data-phase='closing'][data-morph='true'] .album-photo {
+    visibility: hidden;
+  }
+  &[data-phase='opening'][data-morph='false'] {
+    .album-backdrop,
+    .album-panel-bg,
+    .album-chrome,
+    .album-photo {
+      animation: enter-fade 200ms var(--ease-settle) both;
+    }
+  }
+  &[data-phase='closing'][data-morph='true'] {
+    .album-chrome,
+    .album-panel-bg {
+      animation: album-out 400ms var(--ease-settle) both;
+    }
+    .album-backdrop {
+      animation: album-out 600ms var(--ease-settle) 300ms both;
+    }
+  }
+  &[data-phase='closing'][data-morph='false'] {
+    animation: album-out 360ms var(--ease-leave) both;
   }
 }

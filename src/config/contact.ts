@@ -13,5 +13,7 @@ export const whatsapp = {
   messages: {
     /** Quote request — same wording as the current site's "orçamento" CTA. */
     quote: 'Olá! Vim pelo site e gostaria de um orçamento no Recanto Miami.',
+    /** Visit request — same wording as the current site's "Agendar visita" CTA (Section 04 closing CTA). */
+    visit: 'Olá! Gostaria de agendar uma visita ao Recanto Miami.',
   },
 } as const
