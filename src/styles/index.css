@@ -1420,3 +1420,241 @@
     display: block;
   }
 }
+
+/* ---------- Section 08 — Final CTA + Footer ---------- */
+
+/*
+ * Values follow "Final / Desktop 1440" (rev 2), "Tablet 768", "Mobile 390" and
+ * the motion frames "Final / Motion / S1–S3" (desktop) and "M1–M2" (mobile).
+ * Stage: 960 / 900 / 780px tall, content centred with the Figma paddings.
+ *
+ * Expansion: the stage is clipped to its framed composition (inset 72px top /
+ * 80px sides, 12px radius on desktop; 40/40 on tablet; 16px on phones) and
+ * opens to full-bleed. The bottom edge is never inset, so the photo's dissolve
+ * always meets the footer without an ivory seam. `--rest` is 1 when framed and
+ * 0 when open: from 768px it follows `--final-progress` (useFinalExpansion,
+ * scroll-linked); on phones it flips once in a 600ms Settle step. Only the
+ * clip changes — the stage's layout box is fixed, so nothing shifts.
+ */
+/*
+ * Ivory behind the framed photo continues Section 07's surface. The last 2px
+ * are Deep Night so a fractional stage height never leaves an ivory hairline
+ * above the footer (the stage's bottom edge is never inset).
+ */
+@utility final-section {
+  background: linear-gradient(to bottom, var(--color-ivory) calc(100% - 2px), var(--color-night) 0);
+}
+
+@utility final-stage {
+  --inset-x: 16px;
+  --inset-top: 16px;
+  --frame-radius: 12px;
+  --rest: 0;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 780px;
+  padding: 96px 20px 160px;
+  background-color: var(--color-night);
+  clip-path: inset(
+    calc(var(--inset-top) * var(--rest)) calc(var(--inset-x) * var(--rest)) 0
+      round calc(var(--frame-radius) * var(--rest)) calc(var(--frame-radius) * var(--rest)) 0 0
+  );
+  @media (width >= 48rem) {
+    --inset-x: 40px;
+    --inset-top: 40px;
+    min-height: 900px;
+    padding: 112px 40px 176px;
+  }
+  @media (width >= 80rem) {
+    --inset-x: 80px;
+    --inset-top: 72px;
+    min-height: 960px;
+    padding: 120px 80px 200px;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    --rest: 1;
+    transition: clip-path 600ms var(--ease-settle);
+    .is-open & {
+      --rest: 0;
+    }
+    @media (width >= 48rem) {
+      --rest: calc(1 - var(--final-progress, 0));
+      transition: none;
+      .is-open & {
+        --rest: calc(1 - var(--final-progress, 0));
+      }
+    }
+  }
+}
+
+/* Ends 2px short of the bottom (under the opaque dissolve): a photo snapped to whole pixels can otherwise paint a hairline past a fractional stage edge. */
+@utility final-photo {
+  position: absolute;
+  inset: 0 0 2px;
+  z-index: -2;
+  width: 100%;
+  height: calc(100% - 2px);
+  object-fit: cover;
+  object-position: 50% 50%;
+}
+
+/*
+ * Scrim (bottom → top layer): Deep Night tint (55% / 50% / 48%), a centre
+ * vignette behind the copy (≥65% combined, DS rule for body text over media),
+ * a top fade, and the dissolve into the footer surface (0 → 80% → 100%).
+ */
+@utility final-scrim {
+  --scrim: 0.55;
+  --top-fade: 180px;
+  --vignette: radial-gradient(
+    65% 45% at 50% 45%,
+    rgb(23 43 36 / 0.45) 0%,
+    rgb(23 43 36 / 0.35) 60%,
+    rgb(23 43 36 / 0) 100%
+  );
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    linear-gradient(to bottom, rgb(23 43 36 / 0) 61%, rgb(23 43 36 / 0.8) 84%, var(--color-night) 98%),
+    linear-gradient(to bottom, rgb(23 43 36 / 0.55) 0, rgb(23 43 36 / 0) var(--top-fade)),
+    var(--vignette),
+    rgb(23 43 36 / var(--scrim));
+  @media (width >= 48rem) {
+    --scrim: 0.5;
+  }
+  @media (width >= 80rem) {
+    --scrim: 0.48;
+    --top-fade: 220px;
+    --vignette: radial-gradient(
+      52% 47% at 50% 47%,
+      rgb(23 43 36 / 0.5) 0%,
+      rgb(23 43 36 / 0.42) 55%,
+      rgb(23 43 36 / 0) 100%
+    );
+  }
+}
+
+@utility final-copy {
+  position: relative;
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  align-items: center;
+  gap: 28px;
+  text-align: center;
+  @media (width >= 48rem) {
+    gap: 36px;
+  }
+  @media (width >= 80rem) {
+    gap: 40px;
+  }
+}
+
+/* Eyebrow framed by gold rules from 768px (32px, 12px apart; 40px, 16px on desktop). */
+@utility final-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  @media (width >= 48rem) {
+    &::before,
+    &::after {
+      content: '';
+      width: 32px;
+      height: 1px;
+      background-color: var(--color-gold);
+    }
+  }
+  @media (width >= 80rem) {
+    gap: 16px;
+    &::before,
+    &::after {
+      width: 40px;
+    }
+  }
+}
+
+@utility final-title {
+  width: 100%;
+}
+
+/*
+ * Headline lines (type-hero-title: 44 / 80 / 100–112px). Centred below
+ * 1280px; on desktop they are set like Reference 1 inside a 1104px measure
+ * (9.857em at 112px): line 1 left, line 2 right, line 3 centred 40px right of
+ * centre, 0.98 line spacing.
+ */
+@utility final-lines {
+  display: block;
+  @media (width >= 80rem) {
+    width: 9.857em;
+    margin-inline: auto;
+    line-height: 0.98;
+    & > :nth-child(1) {
+      text-align: left;
+    }
+    & > :nth-child(2) {
+      text-align: right;
+    }
+    & > :nth-child(3) {
+      padding-left: 0.714em;
+    }
+  }
+}
+
+@utility final-line {
+  display: block;
+}
+
+@utility final-support {
+  @media (width >= 48rem) {
+    max-width: 520px;
+  }
+  @media (width >= 80rem) {
+    max-width: none;
+  }
+}
+
+@utility final-cta {
+  width: 100%;
+  padding-top: 8px;
+  @media (width >= 48rem) {
+    width: auto;
+    padding-top: 16px;
+  }
+}
+
+/* Copy entrance: 24px rise + fade, 1000ms Settle, 80ms stagger (12px on phones). Reduced motion: 200ms fade. */
+@utility final-enter {
+  --rise: 12px;
+  @media (width >= 48rem) {
+    --rise: 24px;
+  }
+  opacity: 0;
+  .is-inview & {
+    animation: enter-rise 1000ms var(--ease-settle) both;
+    animation-delay: var(--delay, 0ms);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .is-inview & {
+      animation: enter-fade 200ms linear both;
+    }
+  }
+}
+
+/* Footer wordmark: Mobile/Heading/H2 (30) → Desktop/Heading/H2 (40). Official logo pending. */
+@utility type-footer-wordmark {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 30px;
+  line-height: 1.16;
+  letter-spacing: -0.005em;
+  @media (width >= 48rem) {
+    font-size: 40px;
+  }
+}

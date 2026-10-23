@@ -8,13 +8,15 @@ type WhatsAppCtaProps = {
   label: string
   /** Inline: helper line + arrow (hero). Floating: elevated, no helper (menu sheet). */
   context?: 'inline' | 'floating'
+  /** Inline helper line; defaults to the generic wording. */
+  helper?: string
   className?: string
 }
 
 const HELPER = 'A mensagem abre pronta no WhatsApp; nada é enviado sem você confirmar.'
 
 /** Design System "WhatsApp CTA": the primary conversion action. */
-export function WhatsAppCta({ href, label, context = 'inline', className = '' }: WhatsAppCtaProps) {
+export function WhatsAppCta({ href, label, context = 'inline', helper = HELPER, className = '' }: WhatsAppCtaProps) {
   const helperId = useId()
   const isInline = context === 'inline'
   const isSubmit = href === undefined
@@ -62,7 +64,7 @@ export function WhatsAppCta({ href, label, context = 'inline', className = '' }:
       )}
       {isInline && (
         <p id={helperId} className="type-caption text-text-secondary">
-          {HELPER}
+          {helper}
         </p>
       )}
     </div>
