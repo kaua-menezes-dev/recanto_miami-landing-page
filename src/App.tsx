@@ -3,6 +3,7 @@ import { whatsapp } from './config/contact'
 import { buildWhatsAppUrl } from './lib/whatsapp'
 import { Hero } from './sections/hero/Hero'
 import { Intro } from './sections/intro/Intro'
+import { PlanEvent } from './sections/plan/PlanEvent'
 import { Spaces } from './sections/spaces/Spaces'
 import { Stories } from './sections/stories/Stories'
 import { Testimonials } from './sections/testimonials/Testimonials'
@@ -26,6 +27,7 @@ export default function App() {
         <Spaces />
         <Stories visitHref={visitHref} />
         <Testimonials />
+        <PlanEvent />
       </main>
     </>
   )

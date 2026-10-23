@@ -106,8 +106,12 @@ export function useScrollReveal<T extends HTMLElement>() {
   return ref
 }
 
-/** True once the element has entered the viewport (one-shot entrance trigger). */
-export function useInViewOnce<T extends HTMLElement>(threshold = 0.2) {
+/**
+ * True once the element has entered the viewport (one-shot entrance trigger).
+ * `rootMargin` shifts the trigger line, e.g. '0px 0px -20% 0px' fires when the
+ * element's top reaches 80% of the viewport height.
+ */
+export function useInViewOnce<T extends HTMLElement>(threshold = 0.2, rootMargin = '0px') {
   const ref = useRef<T>(null)
   const [inView, setInView] = useState(false)
 
@@ -121,11 +125,11 @@ export function useInViewOnce<T extends HTMLElement>(threshold = 0.2) {
           observer.disconnect()
         }
       },
-      { threshold },
+      { threshold, rootMargin },
     )
     observer.observe(el)
     return () => observer.disconnect()
-  }, [inView, threshold])
+  }, [inView, threshold, rootMargin])
 
   return { ref, inView }
 }
