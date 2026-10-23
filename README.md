@@ -2,7 +2,7 @@
 
 Landing page do **Recanto Miami**, espaço para casamentos, festas e eventos. O objetivo do site é apresentar o espaço real — filme, fotos, casamentos e depoimentos autênticos — e transformar visitantes interessados em **conversas qualificadas no WhatsApp**, com mensagem pré-preenchida e editável.
 
-> **Status atual:** a Seção 01 (Hero + barra de navegação + vídeo de fundo), a Seção 02 (depoimento + revelação da foto no scroll), a Seção 03 (galeria panorâmica dos espaços) a Seção 04 (histórias reais — galeria vertical + álbuns dos casamentos) a Seção 06 (depoimentos em mosaico com movimento sutil das colunas) e a Seção 07 (planeje seu evento — formulário que abre o WhatsApp com a mensagem pronta) estão implementadas; a Seção 05 está implementada em um pull request aguardando revisão. As demais seções estão em fase de design no Figma e **ainda não foram implementadas**. Veja [Status da implementação](#status-da-implementação).
+> **Status atual:** a Seção 01 (Hero + barra de navegação + vídeo de fundo), a Seção 02 (depoimento + revelação da foto no scroll), a Seção 03 (galeria panorâmica dos espaços) a Seção 04 (histórias reais — galeria vertical + álbuns dos casamentos) a Seção 06 (depoimentos em mosaico com movimento sutil das colunas) a Seção 07 (planeje seu evento — formulário que abre o WhatsApp com a mensagem pronta) e a Seção 08 (CTA final cinematográfico + rodapé) estão implementadas; a Seção 05 está implementada em um pull request aguardando revisão. As demais seções estão em fase de design no Figma e **ainda não foram implementadas**. Veja [Status da implementação](#status-da-implementação).
 
 ## Objetivo de negócio
 
@@ -50,18 +50,19 @@ Configuração opcional: copie `.env.example` para `.env` para sobrescrever o n�
 ├── src/
 │   ├── config/
 │   │   ├── site.ts             # Âncoras das seções (ordem do site map)
-│   │   └── contact.ts          # Número e mensagem do WhatsApp (isolados para confirmação)
+│   │   └── contact.ts          # WhatsApp, Instagram, e-mail, endereço e mapa (isolados para confirmação)
 │   ├── lib/whatsapp.ts         # Montagem segura da URL wa.me (+ testes)
 │   ├── lib/easing.ts           # Curvas cubic-bezier do Design System para animações no scroll (+ testes)
 │   ├── components/
-│   │   ├── layout/             # Navbar, MobileMenu (menu em <dialog> nativo)
-│   │   └── ui/                 # ButtonLink, WhatsAppCta, WhatsAppIcon
+│   │   ├── layout/             # Navbar, MobileMenu (menu em <dialog> nativo), Footer
+│   │   └── ui/                 # ButtonLink, WhatsAppCta, WhatsAppIcon, InstagramIcon
 │   ├── sections/hero/          # Hero, HeroVideo, useHeroVideo
 │   ├── sections/intro/         # Intro (Seção 02), useScrollReveal
 │   ├── sections/spaces/        # Spaces (Seção 03), useHorizontalGallery
 │   ├── sections/stories/       # Stories (Seção 04), StoryAlbum, useStoriesGallery, dados dos casamentos
 │   ├── sections/testimonials/  # Testimonials (Seção 06), deriva das colunas, revelação dos cards, depoimentos reais
 │   ├── sections/plan/          # PlanEvent (Seção 07), InquiryForm, opções e mensagem do WhatsApp (+ testes)
+│   ├── sections/final/         # FinalCta (Seção 08), expansão da foto ligada ao scroll (+ testes)
 │   └── styles/index.css        # Tokens do Design System, tipografia, overlay e animações
 ├── CLAUDE.md                   # Regras do projeto para o Claude Code
 └── PRODUCT.md                  # Contexto de produto
@@ -156,6 +157,16 @@ Ainda **não** verificado: comportamento com `prefers-reduced-motion` e Save-Dat
 - **Entrada:** título com a mesma entrada das outras seções (traço → eyebrow → título → texto, 80 ms). Cards: um único IntersectionObserver marca cada card uma vez (opacidade + 12 px, 600 ms Settle), escalonando os que entram juntos linha a linha; ao mudar de breakpoint a entrada não se repete. Deslocamento e entrada ficam em elementos diferentes (coluna × card), sem conflito de `transform`.
 - **Acessibilidade:** `section` com `h2`; cada card é `figure` + `blockquote` + `figcaption`; nada é interativo. Movimento reduzido: sem deslocamento e cards visíveis sem animação.
 
+## Seção 08 — CTA final e rodapé
+
+- **Referência:** a Referência 1 do briefing (fecho escuro, título serifado enorme em linhas deslocadas, um único convite, rodapé centralizado), com a foto real `cerimonia-corredor` no lugar do fundo preto. Figma: "Final / Desktop 1440" (rev. 2, aprovado), "Tablet 768", "Mobile 390" e os quadros de movimento S1–S3 / M1–M2.
+- **Composição:** palco de 960 / 900 / 780 px sob véu Deep Night (48 / 50 / 55%), vinheta central atrás do texto (≥65% combinado, regra do DS), fade no topo e dissolução até o verde do rodapé. Título com o estilo do Hero (112 / 80 / 44 px): no desktop, linhas deslocadas como na referência (esquerda, direita, centro +40 px, medida de 1104 px); abaixo de 1280 px, centralizado — no celular as quebras são "Alguns momentos / merecem um / lugar à *altura*.".
+- **CTA:** "Agende uma visita" usa o `WhatsAppCta` do Hero e abre o WhatsApp direto com a mesma mensagem de visita do site atual (decisão do usuário, 23/10/2026), com a linha de apoio específica da visita.
+- **Expansão da foto:** o palco chega emoldurado sobre o marfim da Seção 07 (recuo de 72 px no topo e 80 px nas laterais, cantos de 12 px no desktop; 40/40 no tablet) e abre até sangrar. Do tablet para cima é ligado à rolagem: `useFinalExpansion` escreve `--final-progress` (curva Drift) e o CSS converte em `clip-path: inset()` — o tamanho de layout nunca muda. A borda inferior nunca recua, então a dissolução encontra o rodapé sem emenda. No celular, um único passo de 600 ms (recuo de 16 px → sangria) quando o palco chega a 80% da tela.
+- **Texto:** eyebrow, três linhas, apoio e CTA sobem 24 px (12 px no celular) com 80 ms de intervalo, CTA por último, uma única vez.
+- **Rodapé:** mesma superfície Deep Night: nome (logo oficial pendente), navegação por âncoras, contatos (WhatsApp, Instagram, e-mail, endereço + "Abrir no mapa") em 4 colunas / 2×2 / lista, e barra com ícones sociais, "Voltar ao topo" e ©. Links externos em nova aba com `rel="noopener noreferrer"` e aviso para leitores de tela; cada contato é um alvo ≥48 px.
+- **Movimento reduzido:** foto já sangrando, sem recuo; textos aparecem com fade de 200 ms.
+
 ## Status da implementação
 
 | Seção | Design (Figma) | Implementação |
@@ -167,7 +178,7 @@ Ainda **não** verificado: comportamento com `prefers-reduced-motion` e Save-Dat
 | 05 — Experiências e Serviços | Aprovado (rev. 1) | Implementado no PR #2 (aguardando revisão) |
 | 06 — Depoimentos (mosaico) | Aprovado (rev. 2) | **Implementado** |
 | 07 — Planeje seu evento (formulário + WhatsApp) | Aprovado (rev. 1) | **Implementado** |
-| 08 — CTA final e rodapé | Em revisão | Não iniciado |
+| 08 — CTA final e rodapé | Desktop aprovado (rev. 2); tablet/celular em revisão (rev. 3) | **Implementado** |
 
 Pendências conhecidas:
 
@@ -176,6 +187,7 @@ Pendências conhecidas:
 - **Seção 04:** confirmar a licença das 40 fotos (crédito @NairobiComunicacao no site atual) e a autorização dos casais; as iniciais (J + M, G + L, N + W, A + I, T + G) são os rótulos já publicados. O relato opcional de cada casal (marcador no Figma) não é exibido até existir texto real autorizado.
 - **Seção 06:** confirmar a autorização de cada depoimento e nome e que todos se referem ao Recanto Miami; o título do card da Marcella é um trecho literal do próprio depoimento; o rótulo "Casamento" vem do título "Nas palavras das noivas" do site atual. Não há fotos autorizadas das clientes (o espaço opcional para foto do Figma não é exibido) nem depoimento de outros tipos de evento.
 - **Seção 07:** os campos, opções e o modelo da mensagem repetem o formulário do site atual (auditado em 23/10/2026); "Ainda não tenho data" foi acrescentado no design. Nome e tipo de evento são obrigatórios (decisão do design; o site atual não exige nenhum campo). A foto `salao` é a mesma da Seção 03 (direitos a confirmar; uma foto dedicada seria preferível). O número do WhatsApp vem de `src/config/contact.ts` (a confirmar com o proprietário). Os valores digitados ficam só no `sessionStorage` da visita; nada é enviado a servidor.
+- **Seção 08:** Instagram (`@recantomiami_eventos`), e-mail, endereço (Av. Acapulco, 186 — Água Azul, Guarulhos - SP) e o link do mapa vêm do rodapé do site atual (lidos em 23/10/2026) e aguardam confirmação do proprietário, como o número. Não existe página de política de privacidade: o link previsto no Figma não foi publicado. O crédito da foto ("a confirmar" no Figma) fica oculto até ser confirmado; a foto `cerimonia-corredor` é a mesma da Seção 03 (uma foto de fim de tarde dedicada seria preferível). A mensagem de visita é a do site atual, não a proposta das notas do Figma (ainda não aprovada).
 
 - **WhatsApp:** número (`+55 11 98946-4713`) e mensagem de orçamento foram copiados do site oficial atual e aguardam confirmação do proprietário (`src/config/contact.ts`).
 - **Logo oficial:** ainda não fornecido; a navegação usa o nome "Recanto Miami" em Bodoni Moda.

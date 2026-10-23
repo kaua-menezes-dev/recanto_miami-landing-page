@@ -1,6 +1,8 @@
+import { Footer } from './components/layout/Footer'
 import { Navbar } from './components/layout/Navbar'
 import { whatsapp } from './config/contact'
 import { buildWhatsAppUrl } from './lib/whatsapp'
+import { FinalCta } from './sections/final/FinalCta'
 import { Hero } from './sections/hero/Hero'
 import { Intro } from './sections/intro/Intro'
 import { PlanEvent } from './sections/plan/PlanEvent'
@@ -28,7 +30,9 @@ export default function App() {
         <Stories visitHref={visitHref} />
         <Testimonials />
         <PlanEvent />
+        <FinalCta visitHref={visitHref} />
       </main>
+      <Footer />
     </>
   )
 }

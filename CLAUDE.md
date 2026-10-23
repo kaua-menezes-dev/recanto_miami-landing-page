@@ -30,6 +30,7 @@ Build an elegant, credible, conversion-oriented website for **Recanto Miami**, a
 >
 > **2026-10-23 — user authorization:** implementation of **Section 06 (Testimonials — compact masonry + scroll-linked column drift)** is authorized and done (`src/sections/testimonials/`), including feature branch, commits, push and direct merge to `main` without a pull request.
 > **2026-10-23 — user authorization:** implementation of **Section 07 (Plan Your Event — inquiry form + WhatsApp handoff)** is authorized (`src/sections/plan/`), including feature branch, commit, push and direct merge to `main` without a pull request.
+> **2026-10-23 — user authorization:** implementation of **Section 08 (Final CTA + Footer — scroll-linked image expansion)** is authorized and done (`src/sections/final/`, `src/components/layout/Footer.tsx`), including feature branch, commit, push and direct merge to `main` without a pull request.
 
 1. Verify the connected Figma MCP can create and edit real **editable Figma frames and components**. A screenshot, static image, generated HTML mock-up or code rendering does not replace an editable Figma prototype.
 2. Start with the **shared Figma Design System** (approved brand tokens, typography, grid, spacing, reusable components and interactive states). Show the deliverable and obtain explicit user approval before designing the first page section.

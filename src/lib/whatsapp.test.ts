@@ -1,9 +1,20 @@
 import { describe, expect, it } from 'vitest'
-import { buildWhatsAppUrl, normalizePhone } from './whatsapp'
+import { buildWhatsAppUrl, formatPhoneBR, normalizePhone } from './whatsapp'
 
 describe('normalizePhone', () => {
   it('keeps digits only', () => {
     expect(normalizePhone('+55 (11) 98946-4713')).toBe('5511989464713')
+  })
+})
+
+describe('formatPhoneBR', () => {
+  it('formats Brazilian mobile and landline numbers', () => {
+    expect(formatPhoneBR('5511989464713')).toBe('(11) 98946-4713')
+    expect(formatPhoneBR('551124681357')).toBe('(11) 2468-1357')
+  })
+
+  it('falls back to international digits for other countries', () => {
+    expect(formatPhoneBR('14155550123')).toBe('+14155550123')
   })
 })
 
