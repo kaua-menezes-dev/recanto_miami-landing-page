@@ -19,6 +19,8 @@ This document prevents Claude from treating an attractive idea as an already app
 | Final CTA destination (2026-10-23) | User decision: Section 08 "Agende uma visita" opens WhatsApp **directly** with a static visit-intent message (no form, does not route to Section 07). Uses the WhatsApp CTA / Inline component like the Hero. Message wording still pending approval |
 | Working process | Research & documentation → proposed design → review/approval → only then implementation |
 | Documentation language | English; site copy in pt-BR |
+| Tech stack (2026-10-23) | React + TypeScript + Vite + Tailwind CSS 4, Lucide icons, self-hosted Bodoni Moda / Hanken Grotesk (Fontsource), Vitest. Motion for React only where an animation genuinely needs it. Authorized by the user with the Hero implementation |
+| Git workflow (2026-10-23) | Feature branch per section, merged into `main` without PRs (user authorization); no force push |
 
 ## Proposed, not yet fully approved
 | Item | Working proposal / open point |
@@ -30,7 +32,7 @@ This document prevents Claude from treating an attractive idea as an already app
 | Wedding album UI | Detail layout, image count, navigation and URLs to be prototyped |
 | Testimonial autoplay | Default to manual; any autoplay needs review |
 | WhatsApp field list and exact template | Must match audited existing process; no invented phone or fields |
-| Tech stack, packages, performance budgets | Decide only during separately authorized implementation planning |
+| Performance budgets | To define before launch; Hero currently ships 74 KB gzip JS, 9.5 KB gzip CSS, 4.1–8.2 MB video per breakpoint |
 
 ## Unknown / verification needed
 - Existing Vercel site source / downloadable original video and photos.

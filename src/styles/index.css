@@ -1,0 +1,301 @@
+@import 'tailwindcss';
+@import '@fontsource-variable/bodoni-moda/opsz.css';
+@import '@fontsource-variable/bodoni-moda/opsz-italic.css';
+@import '@fontsource-variable/hanken-grotesk/index.css';
+
+/*
+ * Botanical Luxury design tokens — mirrors the approved Figma Design System
+ * (variables: Primitives, Color [Day/Evening], Spacing & Radius, Motion).
+ */
+@theme {
+  --font-display: 'Bodoni Moda Variable', 'Bodoni Moda', Didot, Georgia, serif;
+  --font-sans: 'Hanken Grotesk Variable', 'Hanken Grotesk', system-ui, sans-serif;
+
+  /* Primitives — brand (approved Stage 01 palette) */
+  --color-forest: #263b31;
+  --color-ivory: #f7f3eb;
+  --color-gold: #c5a475;
+  --color-sand: #e8dfd1;
+  --color-night: #172b24;
+  --color-graphite: #252923;
+  --color-rose: #d8c1ba;
+
+  /* Primitives — derived (contrast-driven) */
+  --color-forest-hover: #1e332a;
+  --color-graphite-70: #575a52;
+  --color-gold-deep: #755830;
+  --color-sand-line: #d9d2c4;
+  --color-ivory-muted: #bfc1b9;
+
+  /* Radius */
+  --radius-xs: 2px;
+
+  /* Motion tokens */
+  --ease-settle: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-drift: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-leave: cubic-bezier(0.4, 0, 1, 1);
+}
+
+/*
+ * Semantic roles — resolved per colour mode (.mode-day / .mode-evening).
+ * `inline` makes utilities reference the mode variable at the element itself.
+ */
+@theme inline {
+  --color-surface-base: var(--surface-base);
+  --color-text-heading: var(--text-heading);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-accent: var(--text-accent);
+  --color-border-subtle: var(--border-subtle);
+  --color-border-strong: var(--border-strong);
+  --color-action-primary-bg: var(--action-primary-bg);
+  --color-action-primary-bg-hover: var(--action-primary-bg-hover);
+  --color-action-primary-bg-pressed: var(--action-primary-bg-pressed);
+  --color-action-primary-fg: var(--action-primary-fg);
+  --color-action-secondary-fg: var(--action-secondary-fg);
+  --color-action-secondary-bg-hover: var(--action-secondary-bg-hover);
+  --color-focus-ring: var(--focus-ring);
+}
+
+@layer base {
+  .mode-day {
+    --surface-base: var(--color-ivory);
+    --text-heading: var(--color-forest);
+    --text-primary: var(--color-graphite);
+    --text-secondary: var(--color-graphite-70);
+    --text-accent: var(--color-gold-deep);
+    --border-subtle: var(--color-sand-line);
+    --border-strong: var(--color-graphite-70);
+    --action-primary-bg: var(--color-forest);
+    --action-primary-bg-hover: var(--color-forest-hover);
+    --action-primary-bg-pressed: var(--color-night);
+    --action-primary-fg: var(--color-ivory);
+    --action-secondary-fg: var(--color-forest);
+    --action-secondary-bg-hover: var(--color-sand);
+    --focus-ring: var(--color-forest);
+  }
+
+  .mode-evening {
+    --surface-base: var(--color-night);
+    --text-heading: var(--color-ivory);
+    --text-primary: var(--color-ivory);
+    --text-secondary: var(--color-ivory-muted);
+    --text-accent: var(--color-gold);
+    --border-subtle: rgb(247 243 235 / 0.16);
+    --border-strong: var(--color-ivory-muted);
+    --action-primary-bg: var(--color-ivory);
+    --action-primary-bg-hover: var(--color-sand);
+    --action-primary-bg-pressed: var(--color-sand-line);
+    --action-primary-fg: var(--color-forest);
+    --action-secondary-fg: var(--color-ivory);
+    --action-secondary-bg-hover: rgb(247 243 235 / 0.1);
+    --focus-ring: var(--color-gold);
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    html {
+      scroll-behavior: smooth;
+    }
+  }
+
+  body {
+    margin: 0;
+    background-color: var(--color-night);
+    color: var(--color-ivory);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Focus: 2px ring, 3px offset (Design System). */
+  :focus-visible {
+    outline: 2px solid var(--focus-ring, var(--color-gold));
+    outline-offset: 3px;
+  }
+
+  html:has(dialog[open]) {
+    overflow: hidden;
+  }
+}
+
+/* ---------- Typography — Figma text styles ---------- */
+
+@utility type-eyebrow {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 12px;
+  line-height: 1.3;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  @media (width >= 48rem) {
+    font-size: 13px;
+  }
+}
+
+@utility type-body-lede {
+  /* Mobile/Body/MD → Desktop/Body/LG from tablet up */
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.65;
+  @media (width >= 48rem) {
+    font-size: 20px;
+    line-height: 1.6;
+  }
+}
+
+@utility type-label {
+  /* Label/Button */
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: 16px;
+  line-height: 1.2;
+  letter-spacing: 0.01em;
+}
+
+@utility type-nav {
+  /* Desktop/Label/Nav */
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: 15px;
+  line-height: 1.2;
+  letter-spacing: 0.005em;
+}
+
+@utility type-caption {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: 1.4;
+  letter-spacing: 0.002em;
+}
+
+@utility type-wordmark {
+  font-family: var(--font-display);
+  font-size: 28px;
+  line-height: 1.25;
+  letter-spacing: 0;
+}
+
+@utility type-menu-link {
+  /* Mobile/Heading/H2 */
+  font-family: var(--font-display);
+  font-size: 30px;
+  line-height: 1.16;
+  letter-spacing: -0.005em;
+}
+
+/*
+ * Hero headline: Mobile/Display/LG (44) → Desktop/Display/LG (80, tablet
+ * layout up to 1279px) → Desktop/Display/XL (100 at 1280 → 112 at 1440).
+ * Fluid between frames so the approved three-line break holds at every width.
+ */
+@utility type-hero-title {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(2.25rem, 11.28vw, 2.75rem);
+  line-height: 1.04;
+  letter-spacing: -0.015em;
+  @media (width >= 48rem) {
+    font-size: 80px;
+  }
+  @media (width >= 80rem) {
+    font-size: clamp(6.25rem, 7.5vw + 0.25rem, 7rem);
+    line-height: 1;
+    letter-spacing: -0.02em;
+  }
+}
+
+/* ---------- Hero contrast overlay ---------- */
+
+/*
+ * The footage is bright (white architecture), so the overlay has two layers:
+ * - hero-scrim: a light Deep Night tint over the whole film (calmer highlights);
+ * - hero-content-scrim: anchored to the content band, fading in across its top
+ *   padding and holding ~80% behind all text. Because it follows the content
+ *   rather than the viewport, legibility holds at any aspect ratio.
+ * Combined coverage behind text ≈ 84% (DS minimum: 65% body / 55% display).
+ */
+@utility hero-scrim {
+  background: linear-gradient(
+    to bottom,
+    rgb(23 43 36 / 0.4) 0%,
+    rgb(23 43 36 / 0.18) 22%,
+    rgb(23 43 36 / 0.22) 100%
+  );
+}
+
+@utility hero-content-scrim {
+  background: linear-gradient(
+    to bottom,
+    rgb(23 43 36 / 0) 0,
+    rgb(23 43 36 / 0.5) calc(var(--fade) * 0.55),
+    rgb(23 43 36 / 0.78) var(--fade),
+    rgb(23 43 36 / 0.84) 100%
+  );
+  --fade: 7rem;
+  @media (width >= 48rem) {
+    --fade: 5rem;
+  }
+  @media (width >= 80rem) {
+    --fade: 10rem;
+  }
+}
+
+/* Navbar "Over media" variant: Deep Night 55% → 0. */
+@utility nav-over-media {
+  background: linear-gradient(to bottom, rgb(23 43 36 / 0.55), rgb(23 43 36 / 0));
+}
+
+/* ---------- Entrance motion (transform + opacity only) ---------- */
+
+@keyframes enter-rise {
+  from {
+    opacity: 0;
+    transform: translate3d(0, var(--rise, 24px), 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes enter-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@utility enter-rise {
+  --rise: 12px;
+  animation: enter-rise 1000ms var(--ease-settle) both;
+  animation-delay: var(--delay, 0ms);
+  @media (width >= 48rem) {
+    --rise: 24px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+@utility enter-fade {
+  animation: enter-fade 600ms var(--ease-settle) both;
+  animation-delay: var(--delay, 0ms);
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+@utility sheet-enter {
+  animation: enter-rise 360ms var(--ease-settle) both;
+  --rise: 12px;
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
