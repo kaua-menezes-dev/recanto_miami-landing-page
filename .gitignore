@@ -1,0 +1,43 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+dist-ssr/
+*.tsbuildinfo
+
+# Environment files (secrets). Keep only the documented example.
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+npm-debug.log*
+
+# Caches and temporary files
+.vite/
+.eslintcache
+coverage/
+*.tmp
+*.temp
+tmp/
+temp/
+
+# Local-only editor / tool settings
+*.local
+.claude/settings.local.json
+.impeccable/config.local.json
+.vscode/*
+!.vscode/extensions.json
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Original, unoptimized media kept locally (web renditions live in public/media)
+docs/references/hero.mp4
+
+# Third-party platform binary installed with the Impeccable skill (reinstallable, kept local)
+.claude/skills/impeccable/scripts/bin/
