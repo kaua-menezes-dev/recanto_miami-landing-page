@@ -1,6 +1,6 @@
 /**
  * Landing-page anchors, in approved site-map order (docs/design/site-map.md).
- * Only the Hero is implemented; the remaining ids are reserved so navigation
+ * Sections 01–03 are implemented; the remaining ids are reserved so navigation
  * starts working as each section ships. No placeholder sections are rendered.
  */
 export const sectionNav = [

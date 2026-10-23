@@ -242,6 +242,28 @@
   }
 }
 
+/* Section heading title: Mobile/Heading/H1 (36) → Desktop/Heading/H1 (56). */
+@utility type-section-title {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 36px;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  @media (width >= 48rem) {
+    font-size: 56px;
+  }
+}
+
+@utility type-body-md {
+  /* Mobile/Body/MD (16) → Desktop/Body/MD (17) */
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.65;
+  @media (width >= 48rem) {
+    font-size: 17px;
+  }
+}
+
 /* ---------- Hero contrast overlay ---------- */
 
 /*
@@ -384,5 +406,118 @@
   --rise: 12px;
   @media (prefers-reduced-motion: reduce) {
     animation: none;
+  }
+}
+
+/* ---------- Section 03 panoramic gallery ---------- */
+
+/*
+ * Frame sizes follow the approved frames: phones 330×220 (3:2, native swipe),
+ * tablet 380px tall, desktop 500px tall (capped by viewport height on short
+ * laptops), each with its Figma crop ratio. Track padding = page margins, so
+ * the first photo starts on the content edge and the last one ends on it.
+ * `data-gallery` (set by useHorizontalGallery): `linked` clips the row and lets
+ * JS translate it; `native` makes it a contained horizontal scroller.
+ */
+@utility spaces-viewport {
+  overflow: hidden;
+  .spaces[data-gallery='native'] & {
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: var(--spaces-margin);
+    scrollbar-width: none;
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+}
+
+@utility spaces-track {
+  --spaces-margin: 20px;
+  position: relative;
+  display: flex;
+  width: max-content;
+  gap: 12px;
+  padding-inline: var(--spaces-margin);
+  margin: 0;
+  list-style: none;
+  @media (width >= 48rem) {
+    --spaces-margin: 40px;
+    gap: 20px;
+  }
+  @media (width >= 64rem) {
+    --spaces-margin: max(80px, calc((100% - 1280px) / 2));
+    gap: 24px;
+  }
+  .spaces[data-gallery='linked'] & {
+    will-change: transform;
+  }
+}
+
+@utility spaces-item {
+  flex: none;
+  scroll-snap-align: start;
+}
+
+@utility spaces-frame {
+  position: relative;
+  overflow: hidden;
+  background-color: var(--color-sand);
+  width: min(330px, calc(100vw - 60px));
+  aspect-ratio: 3 / 2;
+  @media (width >= 48rem) {
+    width: auto;
+    height: 380px;
+    aspect-ratio: var(--ratio);
+  }
+  @media (width >= 64rem) {
+    height: clamp(380px, 56vh, 500px);
+  }
+}
+
+/* Overscan matches OVERSCAN in useHorizontalGallery (8% each side). */
+@utility spaces-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none; /* preflight caps img at 100% */
+  object-fit: cover;
+  user-select: none;
+  .spaces[data-gallery='linked'] & {
+    left: -8%;
+    width: 116%;
+    will-change: transform;
+  }
+}
+
+/* Gold quarter segment that travels along the hairline with gallery progress. */
+@utility spaces-rail-active {
+  position: absolute;
+  top: -0.5px;
+  left: 0;
+  width: 25%;
+  height: 2px;
+  background-color: var(--color-gold);
+  transform: translateX(calc(var(--progress, 0) * 300%));
+}
+
+/* Icon Button (DS): 52px round, used for reduced-motion / touch-tablet stepping. */
+@utility spaces-step {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 999px;
+  border: 1px solid var(--border-strong);
+  color: var(--action-secondary-fg);
+  transition: background-color 200ms var(--ease-settle), opacity 200ms var(--ease-settle);
+  &:hover:not(:disabled) {
+    background-color: var(--action-secondary-bg-hover);
+  }
+  &:disabled {
+    opacity: 0.35;
+    cursor: default;
   }
 }
