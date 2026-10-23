@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react'
 import { useInViewOnce, useScrollReveal } from '../intro/useScrollReveal'
+import { useAmbientVideo } from './useAmbientVideo'
 
 const delay = (ms: number) => ({ '--delay': `${ms}ms` }) as CSSProperties
 
@@ -32,6 +33,7 @@ export function Experiences() {
   const { ref: venueRef, inView: venueInView } = useInViewOnce<HTMLDivElement>(0.15)
   const { ref: featuresRef, inView: featuresInView } = useInViewOnce<HTMLDivElement>(0.15)
   const finalRef = useScrollReveal<HTMLDivElement>({ anchor: 'top' })
+  const celebrationVideoRef = useAmbientVideo()
 
   return (
     <section
@@ -104,16 +106,27 @@ export function Experiences() {
           className={`exp-pair exp-pair-celebrations mt-24 md:mt-32 xl:mt-44 ${celebrationsInView ? 'is-inview' : ''}`}
         >
           <figure className="exp-pair-media">
-            {/* Approved design uses a labelled placeholder: no real non-wedding celebration photo exists yet. */}
+            {/* Real celebration film (vertical source) covering the approved frame in place of the placeholder. */}
             <div className="exp-reveal exp-reveal-from-left exp-ratio-celebration exp-bleed-right">
-              <div role="img" aria-label="Foto pendente de uma celebração realizada no Recanto Miami" className="exp-placeholder">
-                <span className="type-eyebrow">PLACEHOLDER — foto real de festa no Recanto</span>
-                <span className="type-caption">Debutante, aniversário ou evento corporativo · não usar banco de imagens</span>
-              </div>
+              <video
+                ref={celebrationVideoRef}
+                className="exp-image"
+                poster={`${SRC}/celebracao-poster.webp`}
+                width={720}
+                height={1280}
+                muted
+                loop
+                playsInline
+                disablePictureInPicture
+                disableRemotePlayback
+                preload="none"
+                tabIndex={-1}
+                aria-label="Festa de casamento no Recanto Miami: noivos, banda ao vivo e convidados dançando sob os lustres de cristal."
+              >
+                <source src={`${SRC}/celebracao-720p.mp4`} type="video/mp4" />
+              </video>
             </div>
-            <figcaption className="exp-caption exp-caption-bleed-right">
-              Foto pendente — celebração real realizada no espaço
-            </figcaption>
+            <figcaption className="exp-caption exp-caption-bleed-right">Celebração real no Recanto Miami</figcaption>
           </figure>
           <div className="exp-pair-text">
             <p className="text-text-accent type-eyebrow enter-on-view" style={delay(200)}>

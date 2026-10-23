@@ -38,6 +38,7 @@ Thumbs.db
 
 # Original, unoptimized media kept locally (web renditions live in public/media)
 docs/references/hero.mp4
+docs/references/section5.MP4
 
 # Third-party platform binary installed with the Impeccable skill (reinstallable, kept local)
 .claude/skills/impeccable/scripts/bin/
