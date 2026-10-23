@@ -8,7 +8,7 @@ web
 
 ## Stack
 
-Deferred. No stack, packages or performance budgets are chosen; they are decided only during a separately authorized implementation-planning phase (see `docs/decisions/decision-log.md`). The current phase (04) is Figma-first prototyping only — no website code.
+React + TypeScript + Vite + Tailwind CSS 4 (chosen 2026-10-23 with the authorized Hero implementation; see `docs/decisions/decision-log.md` and `README.md`). Other sections remain Figma-first until their implementation is authorized. Performance budgets are still to be defined.
 
 ## Users
 

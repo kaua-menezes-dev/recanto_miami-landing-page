@@ -19,8 +19,10 @@ Build an elegant, credible, conversion-oriented website for **Recanto Miami**, a
 - Motion: elegant, smooth transitions; use selective 3D only when purposeful. Favor accessibility and performance over spectacle, including reduced-motion behavior.
 - Conversion: preserve the existing personalized WhatsApp prospecting strategy at both approved conversion touchpoints; review the conversion docs for exact message logic and CTAs. Do not invent booking availability.
 
-## Current phase: 04 — Figma-first prototyping
-**Design only. Do not begin implementing the website.**
+## Current phase: 04 — Figma-first prototyping (+ Hero implementation)
+**Design only for every section that is not explicitly authorized for implementation.**
+
+> **2026-10-23 — user authorization:** implementation of **Section 01 (Hero + navbar + background video)** is authorized and done (React + TypeScript + Vite + Tailwind CSS; see `README.md`). The user also authorized commit, push and merge to `main` without pull requests for this work. Every other section stays Figma-only until its design is approved **and** its implementation is explicitly authorized. Items 7–8 below apply to those sections.
 
 1. Verify the connected Figma MCP can create and edit real **editable Figma frames and components**. A screenshot, static image, generated HTML mock-up or code rendering does not replace an editable Figma prototype.
 2. Start with the **shared Figma Design System** (approved brand tokens, typography, grid, spacing, reusable components and interactive states). Show the deliverable and obtain explicit user approval before designing the first page section.

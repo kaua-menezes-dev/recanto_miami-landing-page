@@ -10,15 +10,15 @@
 ## Audit checklist
 | Asset / information | Expected source | Verification required | Current status |
 |---|---|---|---|
-| Hero venue video | Existing Recanto Miami site / owner | Original file, duration, aspect ratio, rights, mobile crop | Pending |
-| Hero poster image | Existing media / original file | Representative frame, permission | Pending |
+| Hero venue video | Existing Recanto Miami site / owner | Original file, duration, aspect ratio, rights, mobile crop | Supplied by the user (2026-10-23) as `docs/references/hero.mp4` (1920×1080 H.264, 29.5 s; kept local, not in Git). Web renditions in `public/media/hero/`. Owner rights confirmation still recommended |
+| Hero poster image | Existing media / original file | Representative frame, permission | First frame of the supplied film (`public/media/hero/hero-poster.webp`) |
 | Venue photography | Existing website / owner | Real areas, caption accuracy, photographer credit | Pending |
 | Five wedding albums | Existing site / Grupo events pages | Correct venue, IDs, names, all selected photos, photo rights | Five expected; files pending |
 | Testimonials | Current website / owner | Exact wording, couple/image association, consent | Pending |
 | Services / experiences | Current website / sales team | Exact offerings, inclusions, limitations | Pending |
 | Practical event guidance | Current website / owner | Dates, process, what is included, FAQs | Pending |
 | Brand logo | Owner-provided asset | Approved format and usage | Pending |
-| WhatsApp details | Owner-provided / current site | Official phone, CTA destination, existing message template | Pending |
+| WhatsApp details | Owner-provided / current site | Official phone, CTA destination, existing message template | Taken from the current official site (2026-10-23): wa.me/5511989464713, quote message "Olá! Vim pelo site e gostaria de um orçamento no Recanto Miami." Isolated in `src/config/contact.ts`; owner confirmation pending |
 | Address / map / social links | Owner-provided / current site | Current active links, spelling, accuracy | Pending |
 
 ## Proposed asset organization
