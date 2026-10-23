@@ -1,6 +1,7 @@
 import { Navbar } from './components/layout/Navbar'
 import { whatsapp } from './config/contact'
 import { buildWhatsAppUrl } from './lib/whatsapp'
+import { Experiences } from './sections/experiences/Experiences'
 import { Hero } from './sections/hero/Hero'
 import { Intro } from './sections/intro/Intro'
 import { Spaces } from './sections/spaces/Spaces'
@@ -24,6 +25,7 @@ export default function App() {
         <Intro />
         <Spaces />
         <Stories visitHref={visitHref} />
+        <Experiences />
       </main>
     </>
   )
