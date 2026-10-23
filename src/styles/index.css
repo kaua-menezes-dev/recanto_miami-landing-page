@@ -588,6 +588,13 @@
   container-type: inline-size;
 }
 
+/*
+ * The gallery ends at its own bottom edge, as the Figma frame does: the loop-seam
+ * cards start inside the fade and are clipped there, so no photo or caption can
+ * reach the CTA below. Only the bottom is clipped (clip-path with negative side
+ * and top insets): the first row's upward drift and the hover/focus states stay
+ * untouched. Heights mirror GALLERY_BOUNDS in weddings.ts (covered by tests).
+ */
 @utility stories-gallery {
   --step: calc(400 / 390 * 100cqw + 77px);
   position: relative;
@@ -595,6 +602,7 @@
   margin: 0;
   padding: 0;
   list-style: none;
+  clip-path: inset(-240px -100vw 0 -100vw);
   @media (width >= 48rem) {
     height: 2960px;
   }
@@ -852,6 +860,7 @@
   border-radius: 999px;
   border: 1px solid var(--border-strong);
   color: var(--action-secondary-fg);
+  cursor: pointer;
   transition: background-color 200ms var(--ease-settle);
   &:hover {
     background-color: var(--action-secondary-bg-hover);
@@ -873,6 +882,7 @@
   height: 48px;
   overflow: hidden;
   opacity: 0.45;
+  cursor: pointer;
   transition: opacity 200ms var(--ease-settle);
   &:hover {
     opacity: 0.8;
@@ -911,6 +921,18 @@
   width: min(100cqw, 100cqh * var(--ratio));
   height: auto;
   aspect-ratio: var(--ratio);
+}
+
+/* The dark stage around the photo closes the album on mouse click (StoryAlbum), so it shows a pointer; the photo itself does not. */
+@utility album-stage {
+  @media (hover: hover) and (pointer: fine) {
+    cursor: pointer;
+    .album-photo,
+    .album-thumbs,
+    [aria-live] {
+      cursor: default;
+    }
+  }
 }
 
 @utility album-photo-enter {

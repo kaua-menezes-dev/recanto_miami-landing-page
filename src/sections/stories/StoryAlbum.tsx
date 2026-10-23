@@ -1,6 +1,14 @@
-import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
-import type { CSSProperties, KeyboardEvent, PointerEvent as ReactPointerEvent, SyntheticEvent } from 'react'
+import { useCallback, useEffect, useId, useLayoutEffect, useReducer, useRef, useState } from 'react'
+import type {
+  CSSProperties,
+  KeyboardEvent,
+  MouseEvent as ReactMouseEvent,
+  PointerEvent as ReactPointerEvent,
+  SyntheticEvent,
+} from 'react'
 import { ArrowLeft, ArrowRight, X } from 'lucide-react'
+import { albumReducer } from './albumState'
+import type { AlbumAction } from './albumState'
 import { pad2, swipeDirection, wrapIndex } from './storiesMotion'
 import { PHOTO_CREDIT, WEDDINGS, photoSize, photoSources } from './weddings'
 
@@ -45,35 +53,47 @@ const rectKeyframe = (rect: DOMRect) => ({
  *
  * Opening follows the reference: the clicked photo morphs from its card into the album
  * stage (1.2s power4.inOut) while the other cards fade, then the story panel appears.
- * Closing (Voltar, ×, Esc or browser Back) morphs the photo back into its card and
- * returns focus to it. Inside: previous/next, thumbnails, ←/→ keys and swipe.
+ * Closing (Voltar, ×, Esc, a click on the dark stage around the photo, or browser Back)
+ * morphs the photo back into its card and returns focus to it. Inside: previous/next,
+ * thumbnails, ←/→ keys, swipe and previous/next story.
+ *
+ * Lifecycle: the opening runs once per album instance and survives React StrictMode's
+ * effect replay (mount → cleanup → mount); `alive` only blocks callbacks after a real
+ * unmount. Any navigation during the morph finishes the opening at once, so the stage
+ * can never stay hidden behind the flying ghost photo.
  */
 export function StoryAlbum({ request, onPhase, onClosed }: StoryAlbumProps) {
   const dialogRef = useRef<HTMLDialogElement>(null)
   const stageImageRef = useRef<HTMLImageElement>(null)
+  const photoAreaRef = useRef<HTMLDivElement>(null)
   const ghostRef = useRef<HTMLImageElement | null>(null)
   const backRef = useRef<HTMLButtonElement>(null)
   const swipeRef = useRef<{ x: number; y: number } | null>(null)
+  const pointerTypeRef = useRef('mouse')
   const phaseRef = useRef<AlbumPhase>('opening')
   const historyPushed = useRef(false)
+  const openStarted = useRef(false)
+  const alive = useRef(false)
   const titleId = useId()
 
-  const [weddingIndex, setWeddingIndex] = useState(request.wedding)
-  const [photoIndex, setPhotoIndex] = useState(request.photo)
+  const [view, dispatch] = useReducer(albumReducer, { wedding: request.wedding, photo: request.photo })
   const [phase, setPhaseState] = useState<AlbumPhase>('opening')
   const [morph, setMorph] = useState(true)
   const [navigated, setNavigated] = useState(false)
 
+  const weddingIndex = view.wedding
+  const photoIndex = view.photo
   const wedding = WEDDINGS[weddingIndex]!
   const photo = wedding.photos[photoIndex]!
   const sources = photoSources(wedding.id, photoIndex)
   const next = WEDDINGS[wrapIndex(weddingIndex + 1, WEDDINGS.length)]!
+  const previous = WEDDINGS[wrapIndex(weddingIndex - 1, WEDDINGS.length)]!
 
-  // Latest values for the close animation (runs from event handlers).
-  const current = useRef({ weddingIndex, photoIndex })
+  // Latest view for the close animation (runs from event handlers).
+  const current = useRef(view)
   useLayoutEffect(() => {
-    current.current = { weddingIndex, photoIndex }
-  }, [weddingIndex, photoIndex])
+    current.current = view
+  }, [view])
 
   const setPhase = useCallback(
     (value: AlbumPhase) => {
@@ -84,66 +104,79 @@ export function StoryAlbum({ request, onPhase, onClosed }: StoryAlbumProps) {
     [onPhase],
   )
 
-  const finish = useCallback(() => {
-    const dialog = dialogRef.current
-    ghostRef.current?.remove()
-    if (dialog?.open) dialog.close()
-    request.opener.focus({ preventScroll: true })
-    onClosed()
-  }, [onClosed, request.opener])
-
-  /**
-   * Animates a ghost copy of the photo between two rects (inside the dialog's top
-   * layer, above everything); resolves when it lands. The ghost stays in place
-   * until `dropGhost`, so the swap to the real image is seamless.
-   */
-  const flight = useCallback((src: string, from: DOMRect, to: DOMRect, duration: number, easing: string) => {
-    const dialog = dialogRef.current
-    if (!dialog) return Promise.resolve()
-    ghostRef.current?.remove()
-    const ghost = document.createElement('img')
-    ghost.alt = ''
-    ghost.className = 'album-ghost'
-    ghost.src = src
-    Object.assign(ghost.style, rectKeyframe(from))
-    dialog.append(ghost)
-    ghostRef.current = ghost
-    const animation = ghost.animate([rectKeyframe(from), rectKeyframe(to)], { duration, easing, fill: 'forwards' })
-    // Animations pause in background tabs; the album must still settle.
-    const timeout = new Promise<void>((resolve) => window.setTimeout(resolve, duration + 300))
-    return Promise.race([animation.finished.then(() => undefined, () => undefined), timeout]).then(() => {
-      Object.assign(ghost.style, rectKeyframe(to))
-      animation.cancel()
-    })
-  }, [])
-
   const dropGhost = useCallback(() => {
     ghostRef.current?.remove()
     ghostRef.current = null
   }, [])
+
+  /** Ends the opening: removes the flying ghost and shows the real stage photo. */
+  const finishOpening = useCallback(() => {
+    if (phaseRef.current !== 'opening') return false
+    dropGhost()
+    setPhase('open')
+    return true
+  }, [dropGhost, setPhase])
+
+  const finish = useCallback(() => {
+    const dialog = dialogRef.current
+    dropGhost()
+    if (dialog?.open) dialog.close()
+    request.opener.focus({ preventScroll: true })
+    onClosed()
+  }, [dropGhost, onClosed, request.opener])
+
+  /**
+   * Animates a ghost copy of the photo between two rects (inside the dialog's top
+   * layer, above everything); resolves when it lands. The ghost stays in place
+   * until it is dropped, so the swap to the real image is seamless.
+   */
+  const flight = useCallback(
+    (src: string, from: DOMRect, to: DOMRect, duration: number, easing: string) => {
+      const dialog = dialogRef.current
+      if (!dialog) return Promise.resolve()
+      dropGhost()
+      const ghost = document.createElement('img')
+      ghost.alt = ''
+      ghost.className = 'album-ghost'
+      ghost.src = src
+      Object.assign(ghost.style, rectKeyframe(from))
+      dialog.append(ghost)
+      ghostRef.current = ghost
+      const animation = ghost.animate([rectKeyframe(from), rectKeyframe(to)], { duration, easing, fill: 'forwards' })
+      // Animations pause in background tabs; the album must still settle.
+      const timeout = new Promise<void>((resolve) => window.setTimeout(resolve, duration + 300))
+      return Promise.race([animation.finished.then(() => undefined, () => undefined), timeout]).then(() => {
+        Object.assign(ghost.style, rectKeyframe(to))
+        animation.cancel()
+      })
+    },
+    [dropGhost],
+  )
 
   const startClose = useCallback(() => {
     if (phaseRef.current === 'closing') return
     const stage = stageImageRef.current
     const frame = request.opener.querySelector<HTMLElement>('[data-photo]')
     const sameView =
-      current.current.weddingIndex === request.wedding && current.current.photoIndex === request.photo
+      current.current.wedding === request.wedding && current.current.photo === request.photo
     const canMorph = !prefersReducedMotion() && sameView && stage && frame && request.opener.isConnected
 
     setMorph(Boolean(canMorph))
     setPhase('closing')
 
     if (!canMorph) {
+      dropGhost()
       window.setTimeout(finish, FADE_MS)
       return
     }
     const from = stage.getBoundingClientRect()
     const to = frame.getBoundingClientRect()
     void flight(stage.currentSrc || stage.src, from, to, CLOSE_MS, CLOSE_EASE).then(finish)
-  }, [finish, flight, request, setPhase])
+  }, [dropGhost, finish, flight, request, setPhase])
 
   /** Every UI close goes through history, so browser Back and the buttons share one path. */
   const requestClose = useCallback(() => {
+    if (phaseRef.current === 'closing') return
     if (historyPushed.current && (window.history.state as Record<string, unknown> | null)?.[HISTORY_KEY]) {
       historyPushed.current = false
       window.history.back()
@@ -152,13 +185,20 @@ export function StoryAlbum({ request, onPhase, onClosed }: StoryAlbumProps) {
     }
   }, [startClose])
 
-  // ---------- open ----------
+  // ---------- open (once per instance, StrictMode-safe) ----------
   useLayoutEffect(() => {
+    alive.current = true
+    const stop = () => {
+      alive.current = false
+    }
+    if (openStarted.current) return stop
+    openStarted.current = true
+
     const dialog = dialogRef.current
     const stage = stageImageRef.current
-    if (!dialog || !stage || dialog.open) return
+    if (!dialog || !stage) return stop
 
-    dialog.showModal()
+    if (!dialog.open) dialog.showModal()
     if (!historyPushed.current) {
       historyPushed.current = true
       window.history.pushState({ ...(window.history.state as object | null), [HISTORY_KEY]: true }, '')
@@ -170,13 +210,11 @@ export function StoryAlbum({ request, onPhase, onClosed }: StoryAlbumProps) {
     // Measured after showModal: the scroll lock has already settled the layout.
     const from = frame?.getBoundingClientRect()
     const to = stage.getBoundingClientRect()
-    let cancelled = false
 
     const reveal = () => {
-      if (cancelled || phaseRef.current !== 'opening') return
-      dropGhost()
-      setPhase('open')
-      backRef.current?.focus({ preventScroll: true })
+      // Skips only after a real unmount (StrictMode's replay sets `alive` back to true).
+      if (!alive.current) return
+      if (finishOpening()) backRef.current?.focus({ preventScroll: true })
     }
 
     if (prefersReducedMotion() || !from || !thumb || from.width === 0 || to.width === 0) {
@@ -190,9 +228,7 @@ export function StoryAlbum({ request, onPhase, onClosed }: StoryAlbumProps) {
       ])
       void Promise.all([flight(thumb.currentSrc || thumb.src, from, to, OPEN_MS, OPEN_EASE), decoded]).then(reveal)
     }
-    return () => {
-      cancelled = true
-    }
+    return stop
     // Runs once per album: the request is fixed for this instance (keyed by the parent).
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -207,37 +243,38 @@ export function StoryAlbum({ request, onPhase, onClosed }: StoryAlbumProps) {
     return () => window.removeEventListener('popstate', onPopState)
   }, [startClose])
 
-  // Warm the neighbouring photos so next/previous never show an empty stage.
+  // Warm the neighbouring photos (and the neighbouring stories' first photos) so
+  // navigation never shows an empty stage.
   useEffect(() => {
     if (phase !== 'open') return
-    for (const offset of [1, -1]) {
-      const index = wrapIndex(photoIndex + offset, wedding.photos.length)
+    const warm = [
+      photoSources(wedding.id, wrapIndex(photoIndex + 1, wedding.photos.length)),
+      photoSources(wedding.id, wrapIndex(photoIndex - 1, wedding.photos.length)),
+      photoSources(next.id, 0),
+      photoSources(previous.id, 0),
+    ]
+    for (const item of warm) {
       const image = new Image()
       image.sizes = STAGE_SIZES
-      image.srcset = photoSources(wedding.id, index).srcSet
+      image.srcset = item.srcSet
     }
-  }, [phase, photoIndex, wedding])
+  }, [phase, photoIndex, wedding, next, previous])
 
-  const showPhoto = (index: number) => {
+  /** All navigation goes through here: it never acts while closing and ends an unfinished opening first. */
+  const navigate = (action: AlbumAction) => {
+    if (phaseRef.current === 'closing') return
+    finishOpening()
     setNavigated(true)
-    setPhotoIndex(wrapIndex(index, wedding.photos.length))
-  }
-
-  const showNextStory = () => {
-    const index = wrapIndex(weddingIndex + 1, WEDDINGS.length)
-    setNavigated(true)
-    setWeddingIndex(index)
-    setPhotoIndex(WEDDINGS[index]!.primary)
+    dispatch(action)
   }
 
   const onKeyDown = (event: KeyboardEvent<HTMLDialogElement>) => {
-    if (phaseRef.current !== 'open') return
     if (event.key === 'ArrowRight') {
       event.preventDefault()
-      showPhoto(photoIndex + 1)
+      navigate({ type: 'step', delta: 1 })
     } else if (event.key === 'ArrowLeft') {
       event.preventDefault()
-      showPhoto(photoIndex - 1)
+      navigate({ type: 'step', delta: -1 })
     }
   }
 
@@ -247,18 +284,26 @@ export function StoryAlbum({ request, onPhase, onClosed }: StoryAlbumProps) {
   }
 
   const onPointerDown = (event: ReactPointerEvent) => {
+    pointerTypeRef.current = event.pointerType
     swipeRef.current = event.pointerType === 'mouse' ? null : { x: event.clientX, y: event.clientY }
   }
   const onPointerUp = (event: ReactPointerEvent) => {
     const start = swipeRef.current
     swipeRef.current = null
-    if (!start || phaseRef.current !== 'open') return
+    if (!start) return
     const direction = swipeDirection(event.clientX - start.x, event.clientY - start.y)
-    if (direction) showPhoto(photoIndex + direction)
+    if (direction) navigate({ type: 'step', delta: direction })
+  }
+
+  /** A mouse click on the dark stage around the photo (not on the photo or a control) closes the album. */
+  const onStageClick = (event: ReactMouseEvent<HTMLDivElement>) => {
+    if (pointerTypeRef.current !== 'mouse' || phaseRef.current !== 'open') return
+    if (event.target === event.currentTarget || event.target === photoAreaRef.current) requestClose()
   }
 
   const size = photoSize(photo.orientation)
   const total = wedding.photos.length
+  const enter = navigated ? 'album-photo-enter' : ''
 
   return (
     <dialog
@@ -281,7 +326,7 @@ export function StoryAlbum({ request, onPhase, onClosed }: StoryAlbumProps) {
               ref={backRef}
               type="button"
               onClick={requestClose}
-              className="flex min-h-11 items-center gap-2 py-3 text-text-primary type-label lg:gap-2.5"
+              className="flex min-h-11 cursor-pointer items-center gap-2 py-3 text-text-primary type-label lg:gap-2.5"
             >
               <ArrowLeft aria-hidden="true" size={20} strokeWidth={1.5} />
               <span className="lg:hidden">Histórias</span>
@@ -296,8 +341,11 @@ export function StoryAlbum({ request, onPhase, onClosed }: StoryAlbumProps) {
           </button>
         </div>
 
-        {/* Story heading */}
-        <div className="album-chrome flex flex-col gap-2 px-5 pb-[46px] pt-4 lg:col-start-2 lg:row-start-2 lg:gap-5 lg:self-center lg:px-16 lg:pb-0 lg:pt-0">
+        {/* Story heading — re-keyed per wedding so a story change crossfades with its photo. */}
+        <div
+          key={wedding.id}
+          className={`album-chrome flex flex-col gap-2 px-5 pb-[46px] pt-4 lg:col-start-2 lg:row-start-2 lg:gap-5 lg:self-center lg:px-16 lg:pb-0 lg:pt-0 ${enter}`}
+        >
           <p className="text-text-accent type-eyebrow">
             História {pad2(weddingIndex + 1)} de {pad2(WEDDINGS.length)}
           </p>
@@ -315,9 +363,13 @@ export function StoryAlbum({ request, onPhase, onClosed }: StoryAlbumProps) {
           onPointerDown={onPointerDown}
           onPointerUp={onPointerUp}
           onPointerCancel={() => (swipeRef.current = null)}
+          onClick={onStageClick}
         >
           {/* Sized from the known aspect ratio (container units), so the box exists before the photo loads. */}
-          <div className="album-photo-area mx-auto flex h-[488px] max-w-[640px] items-center justify-center lg:absolute lg:inset-x-20 lg:bottom-[196px] lg:top-16 lg:h-auto lg:max-w-none">
+          <div
+            ref={photoAreaRef}
+            className="album-photo-area mx-auto flex h-[488px] max-w-[640px] items-center justify-center lg:absolute lg:inset-x-20 lg:bottom-[196px] lg:top-16 lg:h-auto lg:max-w-none"
+          >
             <img
               ref={stageImageRef}
               key={`${wedding.id}-${photoIndex}`}
@@ -330,14 +382,14 @@ export function StoryAlbum({ request, onPhase, onClosed }: StoryAlbumProps) {
               decoding="async"
               draggable={false}
               style={{ '--ratio': size.width / size.height } as CSSProperties}
-              className={`album-photo select-none ${navigated ? 'album-photo-enter' : ''}`}
+              className={`album-photo select-none ${enter}`}
             />
           </div>
 
           <div className="album-chrome mx-auto mt-3 flex max-w-[680px] items-center justify-between px-5 lg:contents">
             <button
               type="button"
-              onClick={() => showPhoto(photoIndex - 1)}
+              onClick={() => navigate({ type: 'step', delta: -1 })}
               aria-label="Foto anterior"
               className="stories-icon-button lg:absolute lg:left-6 lg:top-[calc(64px+(100dvh-260px)/2-26px)]"
             >
@@ -352,7 +404,7 @@ export function StoryAlbum({ request, onPhase, onClosed }: StoryAlbumProps) {
             </p>
             <button
               type="button"
-              onClick={() => showPhoto(photoIndex + 1)}
+              onClick={() => navigate({ type: 'step', delta: 1 })}
               aria-label="Próxima foto"
               className="stories-icon-button lg:absolute lg:right-6 lg:top-[calc(64px+(100dvh-260px)/2-26px)]"
             >
@@ -365,10 +417,10 @@ export function StoryAlbum({ request, onPhase, onClosed }: StoryAlbumProps) {
             className="album-chrome album-thumbs mx-auto mt-4 flex max-w-[680px] gap-2 overflow-x-auto px-5 pb-1 lg:absolute lg:bottom-12 lg:left-1/2 lg:mt-0 lg:max-w-none lg:-translate-x-1/2 lg:overflow-visible lg:px-0 lg:pb-0"
           >
             {wedding.photos.map((item, index) => (
-              <li key={index} className="shrink-0">
+              <li key={`${wedding.id}-${index}`} className="shrink-0">
                 <button
                   type="button"
-                  onClick={() => showPhoto(index)}
+                  onClick={() => navigate({ type: 'goto', photo: index })}
                   aria-label={`Foto ${index + 1} de ${total}: ${item.alt}`}
                   aria-current={index === photoIndex ? 'true' : undefined}
                   className="album-thumb"
@@ -389,16 +441,28 @@ export function StoryAlbum({ request, onPhase, onClosed }: StoryAlbumProps) {
           </ul>
         </div>
 
-        {/* Next story */}
-        <div className="album-chrome mx-5 mb-9 mt-5 flex flex-col gap-2 border-t border-border-subtle pt-5 lg:col-start-2 lg:row-start-3 lg:mx-16 lg:mb-14 lg:mt-0 lg:gap-3 lg:pt-6">
-          <p className="text-text-secondary type-caption">Próxima história</p>
+        {/* Next / previous story */}
+        <div className="album-chrome mx-5 mb-9 mt-5 flex items-end justify-between gap-4 border-t border-border-subtle pt-5 lg:col-start-2 lg:row-start-3 lg:mx-16 lg:mb-14 lg:mt-0 lg:pt-6">
+          <div className="flex flex-col gap-2 lg:gap-3">
+            <p className="text-text-secondary type-caption">Próxima história</p>
+            <button
+              type="button"
+              onClick={() => navigate({ type: 'story', delta: 1 })}
+              aria-label={`Próxima história: ${next.label}`}
+              className="flex min-h-11 cursor-pointer items-center gap-3 self-start text-text-heading lg:gap-4"
+            >
+              <span className="type-album-next">{next.label}</span>
+              <ArrowRight aria-hidden="true" size={24} strokeWidth={1.5} className="text-text-primary" />
+            </button>
+          </div>
           <button
             type="button"
-            onClick={showNextStory}
-            className="flex min-h-11 items-center gap-3 self-start text-text-heading lg:gap-4"
+            onClick={() => navigate({ type: 'story', delta: -1 })}
+            aria-label={`História anterior: ${previous.label}`}
+            className="flex min-h-11 cursor-pointer items-center gap-2 text-text-secondary type-caption transition-colors duration-200 ease-settle hover:text-text-primary"
           >
-            <span className="type-album-next">{next.label}</span>
-            <ArrowRight aria-hidden="true" size={24} strokeWidth={1.5} className="text-text-primary" />
+            <ArrowLeft aria-hidden="true" size={16} strokeWidth={1.5} />
+            História anterior
           </button>
         </div>
       </div>

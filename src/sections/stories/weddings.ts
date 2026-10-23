@@ -132,6 +132,17 @@ export type GalleryCard = {
 }
 
 /**
+ * Gallery box (mirrors `.stories-gallery` / `.stories-seam-fade` in index.css):
+ * the gallery clips its bottom edge and the fade covers its last `fade` px.
+ * Phone values are at the 390px reference width (one card every `step`).
+ */
+export const GALLERY_BOUNDS = {
+  card: 437,
+  desktop: { height: 2960, fade: 330 },
+  phone: { step: 477, height: 7 * 477 + 200, fade: 240 },
+} as const
+
+/**
  * Gallery composition, two cards per wedding, in reading order. Every frame is
  * 400px tall in the approved frames; only the width (and so the crop) varies.
  */

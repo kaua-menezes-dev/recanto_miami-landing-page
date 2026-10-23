@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { COLUMN_FACTOR, columnOf, depthOffset, pad2, swipeDirection, wrapIndex } from './storiesMotion'
-import { GALLERY, WEDDINGS } from './weddings'
+import { GALLERY, GALLERY_BOUNDS, WEDDINGS } from './weddings'
 
 describe('depthOffset', () => {
   it('is zero at the viewport centre', () => {
@@ -44,6 +44,30 @@ describe('gallery composition', () => {
     const leftEdge = Math.max(...left.map((card) => card.desktop.x + card.desktop.w))
     const rightEdge = Math.min(...right.map((card) => card.desktop.x))
     expect(leftEdge).toBeLessThan(rightEdge)
+  })
+
+  it('keeps every visible card, with its maximum drift, above the gallery’s clipped bottom edge', () => {
+    // Drift is capped one viewport away; check a tall 1440px-high window.
+    const maxDrift = COLUMN_FACTOR.right * 1440
+    for (const card of GALLERY.filter((item) => !item.seam)) {
+      const drift = columnOf(card.desktop.x) === 'right' ? maxDrift : 0
+      expect(card.desktop.y + GALLERY_BOUNDS.card + drift).toBeLessThanOrEqual(GALLERY_BOUNDS.desktop.height)
+    }
+    // Phones have no drift; the last real card must end above the fade.
+    const phone = GALLERY_BOUNDS.phone
+    for (const card of GALLERY.filter((item) => !item.seam && item.mobile)) {
+      expect(card.mobile!.slot * phone.step + GALLERY_BOUNDS.card).toBeLessThanOrEqual(phone.height - phone.fade)
+    }
+  })
+
+  it('starts the loop-seam clones inside the fade, so they dissolve before the gallery ends', () => {
+    for (const card of GALLERY.filter((item) => item.seam)) {
+      expect(card.desktop.y).toBeGreaterThanOrEqual(GALLERY_BOUNDS.desktop.height - GALLERY_BOUNDS.desktop.fade)
+      if (card.mobile) {
+        const phone = GALLERY_BOUNDS.phone
+        expect(card.mobile.slot * phone.step).toBeGreaterThanOrEqual(phone.height - phone.fade)
+      }
+    }
   })
 
   it('points every card at an existing photo of its wedding', () => {
