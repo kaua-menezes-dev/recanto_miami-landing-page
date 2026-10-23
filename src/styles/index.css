@@ -1273,22 +1273,6 @@
   }
 }
 
-/* Media/Placeholder (Ratio 3:2) — must be replaced by an authorised photo before launch. */
-@utility exp-placeholder {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 16px;
-  background-color: var(--color-sand);
-  border: 1px dashed var(--border-strong);
-  color: var(--text-secondary);
-  text-align: center;
-}
-
 /* ----- Block 03 ----- */
 
 @utility exp-venue {
