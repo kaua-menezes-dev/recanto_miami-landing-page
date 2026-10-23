@@ -23,6 +23,8 @@ Build an elegant, credible, conversion-oriented website for **Recanto Miami**, a
 **Design only for every section that is not explicitly authorized for implementation.**
 
 > **2026-10-23 — user authorization:** implementation of **Section 01 (Hero + navbar + background video)** is authorized and done (React + TypeScript + Vite + Tailwind CSS; see `README.md`). The user also authorized commit, push and merge to `main` without pull requests for this work. Every other section stays Figma-only until its design is approved **and** its implementation is explicitly authorized. Items 7–8 below apply to those sections.
+>
+> **2026-10-23 — user authorization:** implementation of **Section 02 (Intro — testimonial + scroll-linked photo reveal)** is authorized and done (`src/sections/intro/`), including branch, push, pull request and merge to `main`.
 
 1. Verify the connected Figma MCP can create and edit real **editable Figma frames and components**. A screenshot, static image, generated HTML mock-up or code rendering does not replace an editable Figma prototype.
 2. Start with the **shared Figma Design System** (approved brand tokens, typography, grid, spacing, reusable components and interactive states). Show the deliverable and obtain explicit user approval before designing the first page section.
