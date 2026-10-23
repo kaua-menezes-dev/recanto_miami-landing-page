@@ -1,6 +1,6 @@
 # Testimonials — Editorial Couple Stories
 
-**Status:** Editorial carousel direction chosen over dense card columns.
+**Status:** Superseded on 2026-10-23 — Section 06 uses a compact masonry inspired by Testimonial V2 (user brief; Figma `10 — Testimonials (Section 06)` rev 2, implemented in `src/sections/testimonials/`). The carousel direction below is kept for history; the content and "Never do" rules still apply.
 
 ## Objective
 Make testimonials feel personal and visually authentic while demonstrating the venue's reliability. This is not a generic SaaS-style reviews wall.

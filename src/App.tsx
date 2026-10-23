@@ -5,6 +5,7 @@ import { Hero } from './sections/hero/Hero'
 import { Intro } from './sections/intro/Intro'
 import { Spaces } from './sections/spaces/Spaces'
 import { Stories } from './sections/stories/Stories'
+import { Testimonials } from './sections/testimonials/Testimonials'
 
 const quoteHref = buildWhatsAppUrl(whatsapp.phone, whatsapp.messages.quote)
 const visitHref = buildWhatsAppUrl(whatsapp.phone, whatsapp.messages.visit)
@@ -24,6 +25,7 @@ export default function App() {
         <Intro />
         <Spaces />
         <Stories visitHref={visitHref} />
+        <Testimonials />
       </main>
     </>
   )
