@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { GALLERY_OVERSCAN, parallaxPercent, scrollProgress, smoothTowards } from './galleryMotion'
+import { GALLERY_OVERSCAN, limitLag, parallaxPercent, scrollProgress, smoothTowards } from './galleryMotion'
 
 describe('scrollProgress', () => {
   it('maps the range linearly and clamps outside it', () => {
@@ -32,6 +32,24 @@ describe('smoothTowards', () => {
       expect(value).toBeGreaterThanOrEqual(-2340)
     }
     expect(value).toBe(-2340)
+  })
+})
+
+describe('limitLag', () => {
+  // Pin from scroll 1000 to 3500 (travel 2320 + hold 180).
+  it('leaves the lerp alone while there is pinned scroll to spare', () => {
+    expect(limitLag(500, 900, 1900, 1000, 3500)).toBe(500)
+  })
+
+  it('forces the end state by the time the pin releases going down', () => {
+    expect(limitLag(2000, 2320, 3400, 1000, 3500)).toBe(2220)
+    expect(limitLag(2000, 2320, 3500, 1000, 3500)).toBe(2320)
+    expect(limitLag(2000, 2320, 3900, 1000, 3500)).toBe(2320)
+  })
+
+  it('forces the start state by the time the pin releases going up', () => {
+    expect(limitLag(400, 0, 1100, 1000, 3500)).toBe(100)
+    expect(limitLag(400, 0, 1000, 1000, 3500)).toBe(0)
   })
 })
 
